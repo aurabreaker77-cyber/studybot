@@ -1,42 +1,40 @@
 import os
-import random
+import logging
+import httpx
 from dotenv import load_dotenv
 from groq import Groq
 from telegram import Update, ReplyKeyboardMarkup, ReplyKeyboardRemove
 from telegram.ext import Application, CommandHandler, MessageHandler, filters, ContextTypes, ConversationHandler
-import logging
-
-# Load environment variables
+ 
 load_dotenv()
-
+ 
 TELEGRAM_TOKEN = os.getenv("TELEGRAM_TOKEN")
-GROQ_API_KEY = os.getenv("GROQ_API_KEY")
-
-if not TELEGRAM_TOKEN or not GROQ_API_KEY:
+ 
+# ✅ Multiple Groq API keys rotation
+GROQ_API_KEYS = [
+    os.getenv("GROQ_API_KEY_1"),
+    os.getenv("GROQ_API_KEY_2"),
+    os.getenv("GROQ_API_KEY_3"),
+    os.getenv("GROQ_API_KEY_4"),
+    os.getenv("GROQ_API_KEY_5"),
+]
+GROQ_API_KEYS = [k for k in GROQ_API_KEYS if k]
+ 
+if not TELEGRAM_TOKEN or not GROQ_API_KEYS:
     print("❌ ERROR: .env file mein tokens nahi hain!")
     exit()
-
-print("✅ Tokens loaded successfully")
-
-try:
-    client = Groq(api_key=GROQ_API_KEY)
-    print("✅ Groq client initialized")
-except Exception as e:
-    print(f"❌ Error initializing Groq: {e}")
-    exit()
-
-# ── Storage ──────────────────────────────────────────────────────────────────
-user_conversations = {}   # {user_id: [messages]}
-user_data = {}            # {user_id: {level, score, total, topic_counts}}
+ 
+print(f"✅ Tokens loaded! {len(GROQ_API_KEYS)} Groq API key(s) found!")
+ 
+current_key_index = 0
+ 
+user_conversations = {}
+user_data = {}
 MAX_HISTORY = 20
-
-# ConversationHandler state
 CHOOSING_LEVEL = 1
-
-
-# ── System Prompt ─────────────────────────────────────────────────────────────
+ 
 SYSTEM_PROMPT = """Tu ek expert aur friendly Study Bot hai jo:
-
+ 
 1. Hinglish mein baat karta hai (Hindi + English mix)
 2. Student ka level samajhta hai aur usi hisaab se explain karta hai
 3. Step-by-step crystal-clear solutions deta hai
@@ -46,31 +44,29 @@ SYSTEM_PROMPT = """Tu ek expert aur friendly Study Bot hai jo:
 7. Formulas yaad karne ke liye tricks (mnemonics) deta hai
 8. Hamesha encouraging aur supportive rehta hai
 9. Real exam style mein practice questions bhi deta hai
-
+ 
 IMPORTANT - Developer ke baare mein:
 Agar koi pooche "who made you / who developed you / kisne banaya" — answer dena:
-"Mujhe Shreyansh Pathak ne banaya hai! 🧑‍💻"
+"Mujhe Shreyansh Pathak ne banaya hai!"
 Kabhi Groq ya Llama ka naam developer ke context mein mat lena.
-
+ 
 Response style:
 "Bhai, ye concept simple hai!
 [explanation]
 Tera doubt clear hua? Agar aur samjhna ho to bol!"
-
+ 
 Plain text use kar — markdown avoid kar (Telegram mein issues hote hain).
 """
-
-# ── Logging ───────────────────────────────────────────────────────────────────
+ 
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
-
-
-# ── Helpers ───────────────────────────────────────────────────────────────────
+ 
+ 
 def trim_history(user_id):
     if user_id in user_conversations:
         user_conversations[user_id] = user_conversations[user_id][-MAX_HISTORY:]
-
-
+ 
+ 
 def get_user_data(user_id):
     if user_id not in user_data:
         user_data[user_id] = {
@@ -80,37 +76,43 @@ def get_user_data(user_id):
             "topic_counts": {}
         }
     return user_data[user_id]
-
-
+ 
+ 
 def ai_call(messages):
-    """Single place for all Groq API calls."""
-    response = client.chat.completions.create(
-        model="llama-3.3-70b-versatile",
-        max_tokens=1024,
-        messages=[{"role": "system", "content": SYSTEM_PROMPT}] + messages
-    )
-    return response.choices[0].message.content
-
-
+    global current_key_index
+    for attempt in range(len(GROQ_API_KEYS)):
+        try:
+            client = Groq(api_key=GROQ_API_KEYS[current_key_index])
+            response = client.chat.completions.create(
+                model="llama-3.3-70b-versatile",
+                max_tokens=1024,
+                messages=[{"role": "system", "content": SYSTEM_PROMPT}] + messages
+            )
+            return response.choices[0].message.content
+        except Exception as e:
+            error_msg = str(e).lower()
+            if "rate limit" in error_msg or "quota" in error_msg or "exceeded" in error_msg:
+                print(f"⚠️ Key {current_key_index + 1} exhausted! Switching to next key...")
+                current_key_index = (current_key_index + 1) % len(GROQ_API_KEYS)
+            else:
+                raise e
+    raise Exception("Saari Groq API keys khatam ho gayi!")
+ 
+ 
 async def send(update: Update, text: str):
-    """Send message with optional footer, splitting if needed."""
-    full = text
-    if len(full) > 4000:
-        chunks = [full[i:i+4000] for i in range(0, len(full), 4000)]
+    if len(text) > 4000:
+        chunks = [text[i:i+4000] for i in range(0, len(text), 4000)]
         for chunk in chunks:
             await update.message.reply_text(chunk)
     else:
-        await update.message.reply_text(full)
-
-
-# ── /start ────────────────────────────────────────────────────────────────────
+        await update.message.reply_text(text)
+ 
+ 
 async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
     user_id = update.effective_user.id
     user_name = update.effective_user.first_name
-
     user_conversations[user_id] = []
     get_user_data(user_id)
-
     welcome = (
         f"Namaste {user_name}! 🎓\n\n"
         "Main aapka Personal Study Bot hoon! 📚\n\n"
@@ -128,15 +130,12 @@ async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
         "/practice - Exam style questions\n"
         "/progress - Apna score dekho\n"
         "/clear    - History clear karo\n"
-        "/about    - Bot ke baare mein\n\n"
-        "▀▄▀▄▀▄▀▄▀▄▀▄▀▄▀▄▀▄▀\n"
-        "DEV by:- @shreyanshhh_08"
+        "/about    - Bot ke baare mein"
     )
     await send(update, welcome)
     print(f"✅ User started: {user_name} (ID: {user_id})")
-
-
-# ── /help ─────────────────────────────────────────────────────────────────────
+ 
+ 
 async def help_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
     text = (
         "📖 Help Menu:\n\n"
@@ -151,16 +150,14 @@ async def help_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
         "💡 Tip: Jitna clear question, utna better answer!"
     )
     await send(update, text)
-
-
-# ── /clear ────────────────────────────────────────────────────────────────────
+ 
+ 
 async def clear_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
     user_id = update.effective_user.id
     user_conversations[user_id] = []
     await send(update, "✅ Conversation clear ho gaya! Naya topic start karo.")
-
-
-# ── /about ────────────────────────────────────────────────────────────────────
+ 
+ 
 async def about_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
     text = (
         "ℹ️ About Study Bot\n\n"
@@ -172,9 +169,8 @@ async def about_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
         "💰 Cost: Free!"
     )
     await send(update, text)
-
-
-# ── /level ────────────────────────────────────────────────────────────────────
+ 
+ 
 async def level_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
     keyboard = [["1️⃣ Class 11", "2️⃣ Class 12"], ["3️⃣ Dropper"]]
     reply_markup = ReplyKeyboardMarkup(keyboard, one_time_keyboard=True, resize_keyboard=True)
@@ -183,13 +179,12 @@ async def level_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
         reply_markup=reply_markup
     )
     return CHOOSING_LEVEL
-
-
+ 
+ 
 async def level_chosen(update: Update, context: ContextTypes.DEFAULT_TYPE):
     user_id = update.effective_user.id
     choice = update.message.text
     data = get_user_data(user_id)
-
     if "11" in choice:
         data["level"] = "Class 11"
     elif "12" in choice:
@@ -198,27 +193,23 @@ async def level_chosen(update: Update, context: ContextTypes.DEFAULT_TYPE):
         data["level"] = "Dropper"
     else:
         data["level"] = choice
-
     await update.message.reply_text(
         f"✅ Level set ho gaya: {data['level']}\n\nAb main tujhe usi level ke hisaab se help karunga! 💪",
         reply_markup=ReplyKeyboardRemove()
     )
     return ConversationHandler.END
-
-
+ 
+ 
 async def level_cancel(update: Update, context: ContextTypes.DEFAULT_TYPE):
     await update.message.reply_text("Cancelled.", reply_markup=ReplyKeyboardRemove())
     return ConversationHandler.END
-
-
-# ── /quiz ─────────────────────────────────────────────────────────────────────
+ 
+ 
 async def quiz_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
     user_id = update.effective_user.id
     data = get_user_data(user_id)
     level = data.get("level") or "Class 12"
-
     await update.message.chat.send_action("typing")
-
     prompt = (
         f"Ek {level} level ka MCQ question banao — Physics, Chemistry, Math ya Biology mein se koi ek topic lo.\n"
         "Format:\n"
@@ -231,38 +222,22 @@ async def quiz_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
         "Explanation: [2-3 line mein kyun sahi hai]\n\n"
         "Sirf ye format use karo, kuch extra mat likho."
     )
-
     try:
-        response = client.chat.completions.create(
-            model="llama-3.3-70b-versatile",
-            max_tokens=512,
-            messages=[
-                {"role": "system", "content": SYSTEM_PROMPT},
-                {"role": "user", "content": prompt}
-            ]
-        )
-        quiz_text = response.choices[0].message.content
-
-        # Store quiz in context for answer checking
+        quiz_text = ai_call([{"role": "user", "content": prompt}])
         context.user_data["last_quiz"] = quiz_text
-
-        # Show question without answer
         lines = quiz_text.strip().split("\n")
         question_lines = []
         for line in lines:
             if line.startswith("Answer:") or line.startswith("Explanation:"):
                 break
             question_lines.append(line)
-
         question_only = "\n".join(question_lines)
         await send(update, f"🧠 Quiz Time!\n\n{question_only}\n\nApna answer bhejo (A / B / C / D)")
-
     except Exception as e:
         logger.error(f"Quiz error: {e}")
         await send(update, "❌ Quiz generate karne mein error aaya. Phir try karo!")
-
-
-# ── /formula ──────────────────────────────────────────────────────────────────
+ 
+ 
 async def formula_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
     keyboard = [
         ["⚡ Physics", "🧪 Chemistry"],
@@ -274,49 +249,34 @@ async def formula_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
         reply_markup=reply_markup
     )
     context.user_data["waiting_for"] = "formula_subject"
-
-
-# ── /practice ─────────────────────────────────────────────────────────────────
+ 
+ 
 async def practice_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
     user_id = update.effective_user.id
     data = get_user_data(user_id)
     level = data.get("level") or "Class 12"
-
     await update.message.chat.send_action("typing")
-
     prompt = (
         f"Ek {level} level ka exam-style practice question do — CET/JEE/NEET pattern mein.\n"
         "Numerical ya conceptual koi bhi ho sakta hai.\n"
         "Step-by-step solution bhi do.\n"
         "Plain text mein likho."
     )
-
     try:
-        result = client.chat.completions.create(
-            model="llama-3.3-70b-versatile",
-            max_tokens=800,
-            messages=[
-                {"role": "system", "content": SYSTEM_PROMPT},
-                {"role": "user", "content": prompt}
-            ]
-        )
-        text = result.choices[0].message.content
+        text = ai_call([{"role": "user", "content": prompt}])
         await send(update, f"📝 Practice Question:\n\n{text}")
     except Exception as e:
         logger.error(f"Practice error: {e}")
         await send(update, "❌ Practice question generate karne mein error aaya. Phir try karo!")
-
-
-# ── /progress ─────────────────────────────────────────────────────────────────
+ 
+ 
 async def progress_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
     user_id = update.effective_user.id
     data = get_user_data(user_id)
-
     total = data["total"]
     score = data["score"]
     level = data.get("level") or "Set nahi kiya"
     percent = round((score / total * 100)) if total > 0 else 0
-
     if percent >= 80:
         emoji = "🔥"
         remark = "Mast ja raha hai!"
@@ -329,7 +289,6 @@ async def progress_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
     else:
         emoji = "📈"
         remark = "Koi baat nahi, practice se improve hoga!"
-
     text = (
         f"{emoji} Tera Progress Report:\n\n"
         f"🎓 Level: {level}\n"
@@ -338,19 +297,17 @@ async def progress_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
         f"💬 {remark}"
     )
     await send(update, text)
-
-
-# ── Main message handler ──────────────────────────────────────────────────────
+ 
+ 
 async def handle_message(update: Update, context: ContextTypes.DEFAULT_TYPE):
     user_id = update.effective_user.id
     user_message = update.message.text
-
+ 
     if user_id not in user_conversations:
         user_conversations[user_id] = []
-
+ 
     data = get_user_data(user_id)
-
-    # ── Formula subject selection ──
+ 
     if context.user_data.get("waiting_for") == "formula_subject":
         context.user_data.pop("waiting_for")
         subject_map = {
@@ -364,10 +321,8 @@ async def handle_message(update: Update, context: ContextTypes.DEFAULT_TYPE):
             if key in user_message:
                 subject = subject_map[key]
                 break
-
         if not subject:
             subject = user_message
-
         await update.message.chat.send_action("typing")
         prompt = (
             f"{subject} ki important formulas list karo — CET/JEE/NEET ke liye.\n"
@@ -375,36 +330,24 @@ async def handle_message(update: Update, context: ContextTypes.DEFAULT_TYPE):
             "Plain text mein."
         )
         try:
-            result = client.chat.completions.create(
-                model="llama-3.3-70b-versatile",
-                max_tokens=900,
-                messages=[
-                    {"role": "system", "content": SYSTEM_PROMPT},
-                    {"role": "user", "content": prompt}
-                ]
-            )
-            formulas = result.choices[0].message.content
-            await send(update, f"📚 {subject} Formulas:\n\n{formulas}", reply_markup=ReplyKeyboardRemove() if hasattr(update.message, 'reply_markup') else None)
+            formulas = ai_call([{"role": "user", "content": prompt}])
+            await send(update, f"📚 {subject} Formulas:\n\n{formulas}")
         except Exception as e:
             logger.error(f"Formula error: {e}")
             await send(update, "❌ Formulas fetch karne mein error. Phir try karo!")
         return
-
-    # ── Quiz answer checking ──
+ 
     last_quiz = context.user_data.get("last_quiz")
     if last_quiz and user_message.strip().upper() in ["A", "B", "C", "D"]:
         user_ans = user_message.strip().upper()
         correct_ans = None
         explanation = ""
-
         for line in last_quiz.split("\n"):
             if line.startswith("Answer:"):
                 correct_ans = line.replace("Answer:", "").strip().upper()
             if line.startswith("Explanation:"):
                 explanation = line.replace("Explanation:", "").strip()
-
         data["total"] += 1
-
         if correct_ans and user_ans == correct_ans[0]:
             data["score"] += 1
             result_text = (
@@ -419,56 +362,60 @@ async def handle_message(update: Update, context: ContextTypes.DEFAULT_TYPE):
                 f"Score: {data['score']}/{data['total']}\n\n"
                 f"Koi baat nahi — galtiyon se hi seekhte hain! 💪"
             )
-
         context.user_data.pop("last_quiz")
         await send(update, result_text)
         return
-
-    # ── Normal AI conversation ──
+ 
     print(f"📨 Message from {user_id}: {user_message[:50]}...")
-
     level = data.get("level")
     level_context = f"\nStudent ka level: {level}." if level else ""
-
     user_conversations[user_id].append({
         "role": "user",
         "content": user_message + level_context
     })
     trim_history(user_id)
-
     await update.message.chat.send_action("typing")
-
     try:
         bot_response = ai_call(user_conversations[user_id])
-
         user_conversations[user_id].append({
             "role": "assistant",
             "content": bot_response
         })
-
         await send(update, bot_response)
-        print("✅ Response sent")
-
+        print(f"✅ Response sent (key {current_key_index + 1})")
     except Exception as e:
         logger.error(f"Error handling message: {e}")
         await send(update, f"❌ Kuch error aaya: {str(e)[:100]}\n\nThodi der baad phir se try kar!")
-
-
-# ── Main ──────────────────────────────────────────────────────────────────────
+ 
+ 
+async def error_handler(update: object, context: ContextTypes.DEFAULT_TYPE) -> None:
+    logger.error("Exception while handling an update:", exc_info=context.error)
+ 
+ 
+async def post_init(application: Application) -> None:
+    # ✅ Delete webhook on startup to fix conflict
+    await application.bot.delete_webhook(drop_pending_updates=True)
+    print("✅ Old sessions cleared! Starting fresh...")
+ 
+ 
 def main():
     print("=" * 50)
     print("🚀 Study Bot Starting...")
     print("=" * 50)
-
-    app = Application.builder().token(TELEGRAM_TOKEN).build()
-
-    # Level conversation handler
+ 
+    app = (
+        Application.builder()
+        .token(TELEGRAM_TOKEN)
+        .post_init(post_init)   # ✅ Ye fix karta hai event loop conflict bhi
+        .build()
+    )
+ 
     level_handler = ConversationHandler(
         entry_points=[CommandHandler("level", level_command)],
         states={CHOOSING_LEVEL: [MessageHandler(filters.TEXT & ~filters.COMMAND, level_chosen)]},
         fallbacks=[CommandHandler("cancel", level_cancel)],
     )
-
+ 
     app.add_handler(CommandHandler("start", start))
     app.add_handler(CommandHandler("help", help_command))
     app.add_handler(CommandHandler("clear", clear_command))
@@ -479,12 +426,14 @@ def main():
     app.add_handler(CommandHandler("progress", progress_command))
     app.add_handler(level_handler)
     app.add_handler(MessageHandler(filters.TEXT & ~filters.COMMAND, handle_message))
-
+    app.add_error_handler(error_handler)
+ 
     print("✅ Bot is running... Press Ctrl+C to stop")
     print("=" * 50)
-
-    app.run_polling()
-
-
+ 
+    # ✅ Seedha run_polling — asyncio.run() nahi, ye fix karta hai event loop error
+    app.run_polling(drop_pending_updates=True)
+ 
+ 
 if __name__ == "__main__":
     main()
