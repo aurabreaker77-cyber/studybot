@@ -127,6 +127,18 @@ def build_bar(percent: int) -> str:
     return "█" * filled + "░" * (10 - filled)
 
 
+async def safe_edit(msg, text: str):
+    """
+    edit_text wrapper — 'message is not modified' error silently ignore karo.
+    Baaki saare errors normally raise honge.
+    """
+    try:
+        await msg.edit_text(text)
+    except Exception as e:
+        if "message is not modified" not in str(e).lower():
+            raise
+
+
 ANIMATION_FRAMES = [
     (0,  "⏳ Sawaal samajh raha hoon"),
     (15, "🔍 Knowledge search kar raha hoon"),
@@ -168,19 +180,20 @@ async def process_query(update: Update, question: str):
         for percent, label in ANIMATION_FRAMES:
             if ai_task.done():
                 break
-            await loading_msg.edit_text(f"{label}\n{build_bar(percent)} {percent}%")
+            await safe_edit(loading_msg, f"{label}\n{build_bar(percent)} {percent}%")
             await asyncio.sleep(0.9)
 
         # 90% ke baad bhi agar chal raha ho toh wait karo
-        dot = 0
+        # dot 1 se start — taaki dots kabhi empty string na ho (same text = Telegram error)
+        dot = 1
         while not ai_task.done():
-            dots = "." * (dot % 4)
-            await loading_msg.edit_text(f"🚀 Thoda aur wait karo{dots}\n{build_bar(90)} 90%")
+            dots = "." * (dot % 3 + 1)   # 1, 2, 3, 1, 2, 3 … (kabhi 0 nahi)
+            await safe_edit(loading_msg, f"🚀 Thoda aur wait karo{dots}\n{build_bar(90)} 90%")
             dot += 1
             await asyncio.sleep(0.8)
 
         # ── 100% done ──
-        await loading_msg.edit_text(f"✅ Done!\n{build_bar(100)} 100%")
+        await safe_edit(loading_msg, f"✅ Done!\n{build_bar(100)} 100%")
         await asyncio.sleep(0.4)
 
         bot_response = await ai_task
