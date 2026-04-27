@@ -66,28 +66,25 @@ Kabhi Groq ya Llama ka naam mat lena.
 
 LANGUAGE: Hinglish. FORMAT: Plain text, no markdown."""
 
-SYSTEM_PROMPT_GROUP = """Tu BRAINY hai — ek witty aur sharp Study Bot!
+SYSTEM_PROMPT_GROUP = """Tu BRAINY hai — ek witty, fun aur sharp Study Bot jo group mein entertaining rehta hai!
 
-CHAT TYPE: GROUP — Yahan answers STRICTLY short rakhne hain.
+IRON RULE — KABHI NAHI TODNA:
+Maximum 8 lines. PERIOD. Chahe kuch bhi puchha jaye — 8 lines se zyada NAHI.
+Cut kar, trim kar, but 8 lines ke andar reh.
 
-SABSE ZAROORI RULE — SHORT RAKH:
-Har jawab maximum 6-7 lines. Bas. Group mein log scroll nahi karna chahte.
-Step-by-step sirf numericals mein — warna ek crisp explanation.
+STUDY QUESTIONS (Physics/Chem/Math/Bio):
+Core point ek line mein. Numerical mein sirf approach + answer. Formula ek line. Khatam.
 
-STUDY QUESTIONS:
-- Main point sirf, extra bakwaas nahi
-- Numerical mein sirf key steps, no essay
-- Formula + ek line trick bas
-
-OFF-TOPIC QUESTIONS (cricket, movies, love, life, random):
-- Funny aur witty ek-do line ka jawab
-- Last line mein padhai ki chhoti reminder
+OFF-TOPIC / FUN / GK QUESTIONS:
+Yahan MAZAA aa — witty, funny, engaging jawab do.
+Recent GK, sports, movies, viral news — sab use karo.
+Group ka mood light rakho — roast, joke, fun fact — sab allowed.
 
 DEVELOPER:
-Agar koi pooche kisne banaya: "Shreyansh Pathak ne! Genius banda hai 😎"
+Agar koi pooche kisne banaya: "Shreyansh Pathak ne banaya — genius hai bhai 😎"
 Kabhi Groq ya Llama ka naam mat lena.
 
-LANGUAGE: Hinglish. FORMAT: Plain text, no markdown."""
+LANGUAGE: Hinglish. FORMAT: Plain text only, no markdown, no bullet symbols."""
 
 ROAST_SYSTEM_PROMPT = """You are BRAINY, a savage and brutally witty roast bot.
 Someone has just disrespected or abused Shreyansh Pathak, your creator and owner.
@@ -178,15 +175,7 @@ async def safe_edit(msg, text: str):
             raise
 
 
-ANIMATION_FRAMES = [
-    (0,  "⏳ Sawaal samajh raha hoon"),
-    (15, "🔍 Knowledge search kar raha hoon"),
-    (30, "🧠 Dimag laga raha hoon"),
-    (45, "⚙️  Answer build kar raha hoon"),
-    (60, "🔥 Almost ready"),
-    (75, "✍️  Likh raha hoon"),
-    (90, "🚀 Last touches"),
-]
+THINKING_DOTS = ["Thinking .  ", "Thinking .. ", "Thinking ..."]
 
 
 OWNER_NAMES = ["shreyansh", "pathak", "shreyansh pathak", "owner", "creator"]
@@ -261,9 +250,7 @@ async def process_query(update: Update, question: str):
     trim_history(user_id)
 
     # ── Pehle loading message bhejo ──
-    loading_msg = await update.message.reply_text(
-        f"⏳ Sawaal samajh raha hoon\n{build_bar(0)} 0%"
-    )
+    loading_msg = await update.message.reply_text("Thinking .  ")
 
     # ── AI call background mein start karo ──
     loop = asyncio.get_event_loop()
@@ -271,26 +258,17 @@ async def process_query(update: Update, question: str):
         None, lambda: ai_call(user_conversations[user_id], system_prompt, max_tokens)
     )
 
-    # ── Animation loop — AI complete hone tak ──
+    # ── Animation loop — sirf dots cycle, clean aur minimal ──
     try:
-        for percent, label in ANIMATION_FRAMES:
-            if ai_task.done():
-                break
-            await safe_edit(loading_msg, f"{label}\n{build_bar(percent)} {percent}%")
-            await asyncio.sleep(0.9)
-
-        # 90% ke baad bhi agar chal raha ho toh wait karo
-        # dot 1 se start — taaki dots kabhi empty string na ho (same text = Telegram error)
-        dot = 1
+        dot = 0
         while not ai_task.done():
-            dots = "." * (dot % 3 + 1)   # 1, 2, 3, 1, 2, 3 … (kabhi 0 nahi)
-            await safe_edit(loading_msg, f"🚀 Thoda aur wait karo{dots}\n{build_bar(90)} 90%")
+            await safe_edit(loading_msg, THINKING_DOTS[dot % len(THINKING_DOTS)])
             dot += 1
-            await asyncio.sleep(0.8)
+            await asyncio.sleep(0.5)
 
-        # ── 100% done ──
-        await safe_edit(loading_msg, f"✅ Done!\n{build_bar(100)} 100%")
-        await asyncio.sleep(0.4)
+        # ── Done ──
+        await safe_edit(loading_msg, "Done ✓")
+        await asyncio.sleep(0.3)
 
         bot_response = await ai_task
         user_conversations[user_id].append({"role": "assistant", "content": bot_response})
