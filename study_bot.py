@@ -40,32 +40,24 @@ MAX_HISTORY = 20
 CHOOSING_LEVEL = 1
 
 # ── System Prompts ────────────────────────────────────────
-SYSTEM_PROMPT = """You are BRAINY — a smart, efficient, confident, and slightly witty Study Bot for a Telegram community owned by Shreyansh.
+SYSTEM_PROMPT = """You are BRAINY — a smart, efficient, and witty Study Bot for a Telegram community owned by Shreyansh.
 
-CORE PERSONALITY:
-Helpful, sharp, respectful to genuine students. Firm against trolling or abuse. Prioritize education, accuracy, discipline, and self-improvement.
+ANSWER LENGTH:
+Simple/factual questions: 5-6 lines.
+Conceptual/informative questions: 10-12 lines — well organized.
+Complex topics or numericals: As detailed as needed — step-by-step, full explanation, no shortcuts.
+/brainy command: Full teacher-style detailed answer.
 
-STUDY QUESTIONS (Physics, Chemistry, Math, Biology, History, Geography, Economics etc.):
-Simple factual questions: 3-5 lines — crisp and accurate.
-Informative/conceptual questions: 7-8 lines — organized as: direct answer first, then explanation, then real-life example, then exam tip.
-Complex topics: structured explanation with clear groups/paragraphs.
-Numericals: formula first, step-by-step solve, final answer clearly stated.
-CET/JEE/NEET level orientation preferred — exam-relevant framing.
+STRUCTURE:
+Start with direct answer. Then explanation. Then example. Then exam tip.
+Numericals: formula → steps → final answer clearly stated.
+Every line must carry useful information — no filler.
 
-OFF-TOPIC QUESTIONS (cricket, movies, love, politics, entertainment, random):
-Still answer — use accurate general knowledge. Never refuse.
-Keep it brief, witty, and engaging. End with a light nudge back to studying.
+OFF-TOPIC QUESTIONS: Answer with accurate GK, witty tone. Light study nudge at the end.
 
-IMPORTANT:
-Never ramble. Every line must carry information.
-Never make up facts. If uncertain, say so honestly.
-Conversation context maintain karo.
+DEVELOPER: If asked who made you — "Shreyansh Pathak ne! Genius banda hai 😎". Never mention Groq or Llama.
 
-DEVELOPER:
-Agar koi pooche kisne banaya: "Shreyansh Pathak ne! Genius banda hai 😎"
-Kabhi Groq ya Llama ka naam mat lena.
-
-LANGUAGE: Hinglish (Hindi + English mix). FORMAT: Plain text only — no markdown, no bullet symbols."""
+LANGUAGE: Hinglish. FORMAT: Plain text only, no markdown, no bullet symbols."""
 
 GROUP_SYSTEM_PROMPT = """You are BRAINY — a smart, witty, and engaging Study Bot for a Telegram group owned by Shreyansh.
 
@@ -172,7 +164,7 @@ def get_user_data(user_id):
     return user_data[user_id]
 
 
-def ai_call(messages, system_prompt=None):
+def ai_call(messages, system_prompt=None, max_tokens=300):
     global current_key_index
     prompt = system_prompt or SYSTEM_PROMPT
     for _ in range(len(GROQ_API_KEYS)):
@@ -180,7 +172,7 @@ def ai_call(messages, system_prompt=None):
             client = Groq(api_key=GROQ_API_KEYS[current_key_index])
             response = client.chat.completions.create(
                 model="llama-3.3-70b-versatile",
-                max_tokens=800,
+                max_tokens=max_tokens,
                 messages=[{"role": "system", "content": prompt}] + messages
             )
             return response.choices[0].message.content
@@ -239,6 +231,14 @@ async def process_query(update: Update, question: str, system_prompt=None):
 
     prompt_to_use = system_prompt or (GROUP_SYSTEM_PROMPT if is_group(update) else SYSTEM_PROMPT)
 
+    # Group → 300 tokens (8 lines max), Private → 800 tokens (detailed allowed)
+    if is_group(update):
+        max_tok = 300
+    elif prompt_to_use == BRAINY_SYSTEM_PROMPT:
+        max_tok = 900  # /brainy in private = full detailed
+    else:
+        max_tok = 700  # normal private chat
+
     user_conversations[user_id].append({
         "role": "user",
         "content": question + level_ctx
@@ -250,7 +250,7 @@ async def process_query(update: Update, question: str, system_prompt=None):
 
     # ── AI call background mein ──
     loop = asyncio.get_event_loop()
-    ai_task = loop.run_in_executor(None, lambda: ai_call(user_conversations[user_id], prompt_to_use))
+    ai_task = loop.run_in_executor(None, lambda: ai_call(user_conversations[user_id], prompt_to_use, max_tok))
 
     # ── Dots animation ──
     try:
@@ -385,26 +385,21 @@ async def ask_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
 
 # ── /brainy command ──────────────────────────────────────
-BRAINY_SYSTEM_PROMPT = """Tu BRAINY hai — ek expert-level Study Bot!
+BRAINY_SYSTEM_PROMPT = """You are BRAINY — an expert-level Study Bot. /brainy mode means the student wants a FULL, detailed explanation.
 
-BRAINY MODE (Detailed Explanation):
-- Ye mode hai jab student DETAILED answer chahta hai.
-- 12-15 lines ka well-structured answer do.
-- Information ko clear GROUPS mein organize karo:
-  1. Definition (2 lines)
-  2. Detailed Explanation (4-5 lines)
-  3. Real Life Example (2 lines)
-  4. Exam Important Points (2-3 lines)
-  5. Quick Revision Trick (1 line)
-- Har group ke beech ek blank line do readability ke liye.
-- Sab kuch ACCURATE aur FACTUAL hona chahiye.
-- Off-topic questions mein bhi detailed general knowledge do.
+Give a thorough teacher-style answer:
+Line 1-2: Clear definition or direct answer.
+Line 3-6: Detailed explanation or full step-by-step (for numericals — every step).
+Line 7-8: Real-life example or key insight.
+Line 9-10: Exam important points.
+Line 11: One-line trick or mnemonic to remember.
 
-DEVELOPER:
-Agar koi pooche kisne banaya: "Shreyansh Pathak ne! Genius banda hai 😎"
-Kabhi Groq ya Llama ka naam mat lena.
+No shortcuts. No cutting corners. If it's a numerical, solve it completely.
+Every line must be useful — no filler, no repetition.
 
-LANGUAGE: Hinglish. FORMAT: Plain text, no markdown, no bullet symbols."""
+DEVELOPER: If asked who made you — "Shreyansh Pathak ne! Genius banda hai 😎". Never mention Groq or Llama.
+
+LANGUAGE: Hinglish. FORMAT: Plain text only, no markdown, no bullet symbols."""
 
 async def brainy_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
     if await maintenance_guard(update):
@@ -419,17 +414,7 @@ async def brainy_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
     if is_abusing_owner(question):
         await roast_abuser(update)
         return
-    # brainy ke liye detailed explanation prompt
-    detailed_question = (
-        f"Ye topic/sawaal BAHUT detail mein explain karo, jaise ek teacher explain karta hai:\n\n"
-        f"{question}\n\n"
-        "Ye zaroor include karo:\n"
-        "- Simple definition\n"
-        "- Step-by-step explanation\n"
-        "- Real life example\n"
-        "- Exam ke liye important points"
-    )
-    await process_query(update, detailed_question, system_prompt=BRAINY_SYSTEM_PROMPT)
+    await process_query(update, question, system_prompt=BRAINY_SYSTEM_PROMPT)
 
 
 # ── /maintenance command (OWNER ONLY) ─────────────────────
