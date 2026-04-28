@@ -417,6 +417,79 @@ async def brainy_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
     await process_query(update, question, system_prompt=BRAINY_SYSTEM_PROMPT)
 
 
+# ── /roast command (OWNER ONLY) ───────────────────────────
+ROAST_COMMAND_PROMPT = """You are BRAINY — the most ruthless, creative, and savage roast bot in existence.
+
+Your ONLY job right now: deliver a next-level, absolutely devastating roast of the target.
+
+RULES:
+- English only. Hits harder in English.
+- Be brutally creative — no generic insults. Make it personal, specific, layered.
+- Attack their intelligence, their personality, their life choices, their audacity.
+- Use wordplay, metaphors, and comparisons that make people laugh AND wince.
+- 6-8 lines — enough to leave a mark. Not too long, not too short.
+- Build it up — each line should be worse than the last. End with the kill shot.
+- Zero slurs or hate speech. Pure wit and savagery only.
+- Make it so good that even the target has to respect it.
+- No mercy. No softening. Absolute destruction."""
+
+
+async def roast_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    # Sirf owner use kar sakta hai
+    if not is_owner(update):
+        await send(update, "❌ Ye command sirf bot owner ke liye reserved hai 😎")
+        return
+
+    # Target extract karo — mention ya naam
+    args = update.message.text.partition(" ")[2].strip()
+    if not args:
+        await send(update, "⚠️ Kisko roast karun? Example: /roast @username ya /roast Rahul")
+        return
+
+    # @mention se actual name nikalo
+    target_name = args.lstrip("@")
+
+    # Agar reply pe hai toh us user ka naam lo
+    if update.message.reply_to_message:
+        reply_user = update.message.reply_to_message.from_user
+        target_name = reply_user.first_name or target_name
+
+    loading_msg = await update.message.reply_text("Thinking .  ")
+
+    roast_prompt = (
+        f"Your target is: {target_name}\n\n"
+        f"Destroy them with the most savage, creative, next-level roast you've ever written. "
+        f"Address them directly by name. Make it personal. Make it legendary. "
+        f"6-8 lines. Build up to a devastating kill shot at the end."
+    )
+
+    loop = asyncio.get_event_loop()
+    ai_task = loop.run_in_executor(
+        None,
+        lambda: ai_call([{"role": "user", "content": roast_prompt}], ROAST_COMMAND_PROMPT, 400)
+    )
+
+    try:
+        dot = 0
+        while not ai_task.done():
+            await safe_edit(loading_msg, THINKING_DOTS[dot % len(THINKING_DOTS)])
+            dot += 1
+            await asyncio.sleep(0.5)
+
+        await safe_edit(loading_msg, "Done ✓")
+        await asyncio.sleep(0.3)
+
+        roast_text = await ai_task
+        await loading_msg.delete()
+        await send(update, f"🔥 BRAINY ROASTS {target_name.upper()} 🔥\n\n{roast_text}")
+        print(f"🔥 Roast delivered for target: {target_name}")
+
+    except Exception as e:
+        logger.error(f"Roast command error: {e}")
+        await loading_msg.delete()
+        await send(update, "❌ Roast generate nahi hua. Thodi der baad try karo!")
+
+
 # ── /maintenance command (OWNER ONLY) ─────────────────────
 async def maintenance_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
     global MAINTENANCE_MODE
@@ -705,9 +778,10 @@ def main():
     # ── Register all handlers ──
     app.add_handler(CommandHandler("start", start))
     app.add_handler(CommandHandler("help", help_command))
-    app.add_handler(CommandHandler("ask", ask_command))            # ✅ NEW
-    app.add_handler(CommandHandler("brainy", brainy_command))    # ✅ NEW
-    app.add_handler(CommandHandler("maintenance", maintenance_command))  # ✅ NEW
+    app.add_handler(CommandHandler("ask", ask_command))
+    app.add_handler(CommandHandler("brainy", brainy_command))
+    app.add_handler(CommandHandler("roast", roast_command))           # ✅ NEW
+    app.add_handler(CommandHandler("maintenance", maintenance_command))
     app.add_handler(CommandHandler("clear", clear_command))
     app.add_handler(CommandHandler("about", about_command))
     app.add_handler(CommandHandler("quiz", quiz_command))
