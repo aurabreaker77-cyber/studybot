@@ -25,12 +25,13 @@ GROQ_API_KEYS    = [k for k in [os.getenv("GROQ_API_KEY_1"),    os.getenv("GROQ_
 NVIDIA_API_KEYS  = [k for k in [os.getenv("NVIDIA_API_KEY_1"),  os.getenv("NVIDIA_API_KEY_2")]  if k]
 DEEPSEEK_API_KEYS= [k for k in [os.getenv("DEEPSEEK_API_KEY_1"),os.getenv("DEEPSEEK_API_KEY_2")]if k]
 GEMINI_API_KEYS  = [k for k in [os.getenv("GEMINI_API_KEY_1"),  os.getenv("GEMINI_API_KEY_2")]  if k]
+TAVILY_API_KEYS  = [k for k in [os.getenv("TAVILY_API_KEY_1"),  os.getenv("TAVILY_API_KEY_2")]  if k]
 
 if not TELEGRAM_TOKEN or not GROQ_API_KEYS:
     print("ERROR: The bot server must be down try contacting dev for fix:- @shreyanshhh_08")
     exit()
 
-print(f"Groq keys: {len(GROQ_API_KEYS)} | Nvidia: {len(NVIDIA_API_KEYS)} | Deepseek: {len(DEEPSEEK_API_KEYS)} | Gemini: {len(GEMINI_API_KEYS)}")
+print(f"Groq keys: {len(GROQ_API_KEYS)} | Nvidia: {len(NVIDIA_API_KEYS)} | Deepseek: {len(DEEPSEEK_API_KEYS)} | Gemini: {len(GEMINI_API_KEYS)} | Tavily: {len(TAVILY_API_KEYS)}")
 if OWNER_ID: print(f"Owner ID: {OWNER_ID}")
 
 # ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
@@ -123,101 +124,55 @@ def clean_response(text: str) -> str:
 
 def web_search(query: str, max_results: int = 5) -> str:
     """
-    Search DuckDuckGo Instant Answer API (free, no key required).
+    Search using Tavily API with key rotation.
     Returns a formatted string of results for the AI to use.
     """
+    if not TAVILY_API_KEYS:
+        return "❌ Tavily API key set nahi hai. TAVILY_API_KEY_1 Railway mein add karo."
+
     try:
-        # DuckDuckGo Instant Answer API
-        ddg_url = "https://api.duckduckgo.com/"
-        params = {
-            "q": query,
-            "format": "json",
-            "no_html": "1",
-            "skip_disambig": "1",
-            "no_redirect": "1",
-        }
-        resp = requests.get(ddg_url, params=params, timeout=10,
-                            headers={"User-Agent": "BrainyBot/1.0"})
+        # Rotate Tavily API keys
+        api_key = TAVILY_API_KEYS[key_idx["tavily"] % len(TAVILY_API_KEYS)]
+        key_idx["tavily"] = (key_idx["tavily"] + 1) % len(TAVILY_API_KEYS)
+
+        resp = requests.post(
+            "https://api.tavily.com/search",
+            json={
+                "api_key": api_key,
+                "query": query,
+                "max_results": max_results,
+                "search_depth": "basic",
+                "include_answer": True,
+            },
+            timeout=15,
+            headers={"Content-Type": "application/json"}
+        )
         resp.raise_for_status()
         data = resp.json()
 
         results = []
 
-        # Abstract (Wikipedia-style direct answer)
-        if data.get("AbstractText"):
-            results.append(f"📌 {data['AbstractText'][:600]}")
-            if data.get("AbstractURL"):
-                results.append(f"🔗 Source: {data['AbstractURL']}")
+        # Direct answer if available
+        if data.get("answer"):
+            results.append(f"⚡ Direct Answer: {data['answer'][:500]}")
 
-        # Answer (instant calculation / direct facts)
-        if data.get("Answer"):
-            results.append(f"⚡ Direct Answer: {data['Answer']}")
-
-        # Definition
-        if data.get("Definition"):
-            results.append(f"📖 Definition: {data['Definition'][:400]}")
-
-        # Related topics (top N)
-        topics = data.get("RelatedTopics", [])
-        count = 0
-        for t in topics:
-            if count >= max_results:
-                break
-            if isinstance(t, dict) and t.get("Text"):
-                results.append(f"→ {t['Text'][:250]}")
-                count += 1
-            elif isinstance(t, dict) and t.get("Topics"):
-                for sub in t["Topics"]:
-                    if count >= max_results:
-                        break
-                    if isinstance(sub, dict) and sub.get("Text"):
-                        results.append(f"→ {sub['Text'][:250]}")
-                        count += 1
+        # Search results
+        for r in data.get("results", [])[:max_results]:
+            title   = r.get("title", "")
+            content = r.get("content", "")[:300]
+            url     = r.get("url", "")
+            if title and content:
+                results.append(f"📌 {title}\n→ {content}\n🔗 {url}")
 
         if not results:
-            # Fallback: DuckDuckGo HTML scrape (lite version)
-            try:
-                lite_resp = requests.get(
-                    "https://lite.duckduckgo.com/lite/",
-                    params={"q": query},
-                    timeout=10,
-                    headers={"User-Agent": "Mozilla/5.0 BrainyBot"}
-                )
-                from html.parser import HTMLParser
+            return f"❌ '{query}' ke liye koi results nahi mile."
 
-                class _DDGParser(HTMLParser):
-                    def __init__(self):
-                        super().__init__()
-                        self.snippets = []
-                        self._in_result = False
-
-                    def handle_data(self, data):
-                        data = data.strip()
-                        if data and len(data) > 40:
-                            self.snippets.append(data)
-
-                parser = _DDGParser()
-                parser.feed(lite_resp.text)
-                # Take top 5 unique text snippets that look like actual content
-                seen = set()
-                for s in parser.snippets:
-                    if s not in seen and not s.startswith(("Next", "Prev", "DuckDuckGo", "About")):
-                        results.append(f"→ {s[:300]}")
-                        seen.add(s)
-                    if len(results) >= max_results:
-                        break
-            except Exception:
-                pass
-
-        if not results:
-            return f"❌ '{query}' ke liye koi results nahi mile. Query change karke dobara try karo."
-
-        return "\n".join(results)
+        return "\n\n".join(results)
 
     except requests.exceptions.Timeout:
         return "⏰ Search timeout ho gaya. Thodi der baad try karo."
     except Exception as e:
-        logger.error(f"Web search error: {e}")
+        logger.error(f"Tavily search error: {e}")
         return f"❌ Search mein error aaya: {str(e)[:100]}"
 
 # ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
@@ -234,7 +189,7 @@ MAX_ASK_HISTORY         = 10   # ask: 10 messages (5 exchanges)
 MAX_INTERACTION_LOG     = 100  # Keep last 100 saved interactions for learning
 CHOOSING_LEVEL          = 1
 
-key_idx = {"groq": 0, "nvidia": 0, "deepseek": 0, "gemini": 0}
+key_idx = {"groq": 0, "nvidia": 0, "deepseek": 0, "gemini": 0, "tavily": 0}
 
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
@@ -806,12 +761,12 @@ def is_abusing_owner(text: str) -> bool:
     t = text.lower()
     return any(w in t for w in ABUSE_KEYWORDS) and any(n in t for n in OWNER_NAMES)
 
-async def send(update: Update, text: str):
+async def send(update: Update, text: str, parse_mode: str = None):
     if len(text) > 4000:
         for i in range(0, len(text), 4000):
-            await update.message.reply_text(text[i:i+4000])
+            await update.message.reply_text(text[i:i+4000], parse_mode=parse_mode)
     else:
-        await update.message.reply_text(text)
+        await update.message.reply_text(text, parse_mode=parse_mode)
 
 async def safe_edit(msg, text: str):
     try:
@@ -1585,7 +1540,7 @@ async def handle_message(update: Update, context: ContextTypes.DEFAULT_TYPE):
         )
         try:
             formulas = ai_call([{"role": "user", "content": prompt}], max_tokens=600)
-            await send(update, f"📚 𝗙𝗼𝗿𝗺𝘂𝗹𝗮𝘀 — {subject}:\n\n{formulas}")
+            await send(update, f"📚 𝗙𝗼𝗿𝗺𝘂𝗹𝗮𝘀 — {subject}:\n\n`{formulas}`", parse_mode="Markdown")
         except Exception as e:
             logger.error(f"Formula error: {e}")
             await send(update, "❌ Formulas fetch karne mein error. Phir try karo!")
