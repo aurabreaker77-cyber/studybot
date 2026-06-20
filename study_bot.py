@@ -1316,7 +1316,8 @@ def _call_groq(messages, system_prompt, max_tokens):
                 max_tokens=max_tokens,
                 messages=[{"role": "system", "content": system_prompt}] + messages
             )
-            return resp.choices[0].message.content
+            truncated = resp.choices[0].finish_reason == "length"
+            return resp.choices[0].message.content, truncated
         except Exception as e:
             if _is_rate_err(e):
                 print(f"Groq key exhausted, rotating...")
@@ -1353,7 +1354,11 @@ def _call_gemini(messages, system_prompt, max_tokens):
                         json=payload, timeout=20
                     )
                     resp.raise_for_status()
-                    return resp.json()["candidates"][0]["content"]["parts"][0]["text"]
+                    data = resp.json()
+                    candidate = data["candidates"][0]
+                    text = candidate["content"]["parts"][0]["text"]
+                    truncated = candidate.get("finishReason") == "MAX_TOKENS"
+                    return text, truncated
                 except Exception as me:
                     if "404" in str(me) or "not found" in str(me).lower():
                         print(f"Gemini model {model} not found, trying next model...")
@@ -1395,7 +1400,9 @@ def _call_deepseek(messages, system_prompt, max_tokens):
                     json=payload, timeout=25
                 )
                 resp.raise_for_status()
-                return resp.json()["choices"][0]["message"]["content"]
+                data = resp.json()
+                truncated = data["choices"][0].get("finish_reason") == "length"
+                return data["choices"][0]["message"]["content"], truncated
             except Exception as e:
                 err_str = str(e).lower()
                 if "404" in err_str or "model" in err_str and "not" in err_str:
@@ -1430,7 +1437,9 @@ def _call_nvidia(messages, system_prompt, max_tokens):
                 json=payload, timeout=25
             )
             resp.raise_for_status()
-            return resp.json()["choices"][0]["message"]["content"]
+            data = resp.json()
+            truncated = data["choices"][0].get("finish_reason") == "length"
+            return data["choices"][0]["message"]["content"], truncated
         except Exception as e:
             if _is_rate_err(e):
                 print(f"Nvidia key exhausted, rotating...")
@@ -1441,13 +1450,9 @@ def _call_nvidia(messages, system_prompt, max_tokens):
 def _call_cerebras(messages, system_prompt, max_tokens):
     if not CEREBRAS_API_KEYS:
         raise Exception("NO_KEYS: cerebras")
-    # Cerebras available models (try in order)
-    CEREBRAS_MODELS = [
-        "llama-3.3-70b",
-        "llama3.3-70b",
-        "llama-3.1-70b",
-        "llama3.1-70b",
-    ]
+    # NOTE: Llama 3.3 70B was removed from Cerebras's public catalog — these are the
+    # current models as of mid-2026. (Re-applying this fix; it reverted in this upload.)
+    CEREBRAS_MODELS = ["gpt-oss-120b", "zai-glm-4.7"]
     for _ in range(len(CEREBRAS_API_KEYS)):
         try:
             key = _rotate_key("cerebras", CEREBRAS_API_KEYS)
@@ -1456,7 +1461,7 @@ def _call_cerebras(messages, system_prompt, max_tokens):
                 try:
                     payload = {
                         "model": model,
-                        "max_tokens": min(max_tokens, 2048),  # Cerebras max safe limit
+                        "max_tokens": min(max_tokens, 2048),  # Cerebras max safe limit per call
                         "messages": [{"role": "system", "content": system_prompt}] + messages
                     }
                     resp = requests.post(
@@ -1465,8 +1470,10 @@ def _call_cerebras(messages, system_prompt, max_tokens):
                         json=payload, timeout=20
                     )
                     resp.raise_for_status()
+                    data = resp.json()
+                    truncated = data["choices"][0].get("finish_reason") == "length"
                     print(f"Cerebras model used: {model}")
-                    return resp.json()["choices"][0]["message"]["content"]
+                    return data["choices"][0]["message"]["content"], truncated
                 except Exception as me:
                     if "404" in str(me) or "not found" in str(me).lower() or "model" in str(me).lower():
                         print(f"Cerebras model {model} not found, trying next...")
@@ -1514,7 +1521,9 @@ def _call_openrouter(messages, system_prompt, max_tokens):
                     json=payload, timeout=25
                 )
                 resp.raise_for_status()
-                return resp.json()["choices"][0]["message"]["content"]
+                data = resp.json()
+                truncated = data["choices"][0].get("finish_reason") == "length"
+                return data["choices"][0]["message"]["content"], truncated
             except Exception as e:
                 err_str = str(e).lower()
                 if "404" in err_str or "no longer" in err_str or "not found" in err_str:
@@ -1557,7 +1566,9 @@ def _call_sambanova(messages, system_prompt, max_tokens):
                     json=payload, timeout=20
                 )
                 resp.raise_for_status()
-                return resp.json()["choices"][0]["message"]["content"]
+                data = resp.json()
+                truncated = data["choices"][0].get("finish_reason") == "length"
+                return data["choices"][0]["message"]["content"], truncated
             except Exception as e:
                 err_str = str(e).lower()
                 if "404" in err_str or "not found" in err_str or "model" in err_str:
@@ -1599,7 +1610,9 @@ def _call_together(messages, system_prompt, max_tokens):
                     json=payload, timeout=20
                 )
                 resp.raise_for_status()
-                return resp.json()["choices"][0]["message"]["content"]
+                data = resp.json()
+                truncated = data["choices"][0].get("finish_reason") == "length"
+                return data["choices"][0]["message"]["content"], truncated
             except Exception as e:
                 err_str = str(e).lower()
                 if "404" in err_str or "not found" in err_str:
@@ -1809,29 +1822,68 @@ def get_provider_chain(question_type: str, system_prompt: str) -> list:
         ("Nvidia",      _call_nvidia),
     ]
 
+PROVIDER_MAX_TOKENS = {
+    "Groq":       8192,
+    "Gemini":     8192,
+    "Deepseek":   8192,
+    "Nvidia":     4096,
+    "Cerebras":   2048,   # hard per-call ceiling — continuation rounds make up the rest
+    "OpenRouter": 4096,
+    "SambaNova":  4096,
+    "Together":   4096,
+}
+
+MAX_CONTINUATION_ROUNDS = 4  # safety cap so one runaway answer can't loop forever / burn quota
+
 def ai_call(messages, system_prompt=None, max_tokens=None):
+    """
+    No more fixed truncation. max_tokens is just a *starting* budget — if the model's
+    answer genuinely needs more space, we detect the cut-off (finish_reason == length /
+    MAX_TOKENS) and automatically ask it to continue from where it stopped, stitching the
+    pieces together. The model decides when it's actually finished, not an arbitrary cap.
+    """
     prompt = system_prompt or SYSTEM_PROMPT
     q_type = detect_question_type(messages)
 
-    # Smart token limit — short answers = faster responses
     if max_tokens is None:
         TOKEN_MAP = {
-            "numerical": 700,
-            "detailed":  600,
-            "gk":        450,
-            "creative":  500,
-            "simple":    300,
+            "numerical": 1200,
+            "detailed":  1000,
+            "gk":        700,
+            "creative":  800,
+            "simple":    500,
         }
-        max_tokens = TOKEN_MAP.get(q_type, 380)
+        max_tokens = TOKEN_MAP.get(q_type, 600)
 
     chain = get_provider_chain(q_type, prompt)
-    print(f"Q-type: {q_type} | tokens: {max_tokens} → {chain[0][0]}")
+    print(f"Q-type: {q_type} | starting tokens: {max_tokens} → {chain[0][0]}")
     last_err = None
+
     for name, caller in chain:
         try:
-            result = caller(messages, prompt, max_tokens)
-            print(f"✅ {name}")
-            return result
+            provider_cap = PROVIDER_MAX_TOKENS.get(name, max_tokens)
+            call_tokens = min(max_tokens, provider_cap) if max_tokens else provider_cap
+            text, truncated = caller(messages, prompt, call_tokens)
+            full_text = text or ""
+
+            rounds = 0
+            convo = list(messages)
+            while truncated and rounds < MAX_CONTINUATION_ROUNDS:
+                rounds += 1
+                convo = convo + [
+                    {"role": "assistant", "content": full_text},
+                    {"role": "user", "content": "Continue exactly from where you stopped. Don't repeat anything, don't restart — just keep going."}
+                ]
+                try:
+                    cont_text, truncated = caller(convo, prompt, provider_cap)
+                    full_text += cont_text or ""
+                except Exception as ce:
+                    print(f"Continuation failed on {name} (round {rounds}): {str(ce)[:60]} — returning partial answer")
+                    break
+
+            suffix = f" (+{rounds} continuation{'s' if rounds != 1 else ''})" if rounds else ""
+            print(f"✅ {name}{suffix}")
+            return full_text
         except Exception as e:
             if "NO_KEYS:" in str(e):
                 continue
@@ -1853,24 +1905,43 @@ def _analyze_gemini_vision(image_bytes: bytes, question: str) -> str:
     ]
     key = _rotate_key("gemini", GEMINI_API_KEYS)
     img_b64 = base64.b64encode(image_bytes).decode("utf-8")
-    user_text = question if question else "Is image mein jo question, problem, ya concept hai usse solve ya explain karo."
-    payload = {
-        "system_instruction": {"parts": [{"text": IMAGE_SYSTEM_PROMPT}]},
-        "contents": [{"role": "user", "parts": [
-            {"inline_data": {"mime_type": "image/jpeg", "data": img_b64}},
-            {"text": user_text}
-        ]}],
-        "generationConfig": {"maxOutputTokens": 600}
-    }
+    user_text = question if question else "Solve or explain whatever question, problem, or concept is in this image."
+
+    contents = [{"role": "user", "parts": [
+        {"inline_data": {"mime_type": "image/jpeg", "data": img_b64}},
+        {"text": user_text}
+    ]}]
+
     last_err = None
     for model in VISION_MODELS:
         try:
-            resp = requests.post(
-                f"https://generativelanguage.googleapis.com/v1beta/models/{model}:generateContent?key={key}",
-                json=payload, timeout=30
-            )
-            resp.raise_for_status()
-            return resp.json()["candidates"][0]["content"]["parts"][0]["text"]
+            full_text = ""
+            rounds = 0
+            convo = list(contents)
+            while True:
+                payload = {
+                    "system_instruction": {"parts": [{"text": IMAGE_SYSTEM_PROMPT}]},
+                    "contents": convo,
+                    "generationConfig": {"maxOutputTokens": 1500}
+                }
+                resp = requests.post(
+                    f"https://generativelanguage.googleapis.com/v1beta/models/{model}:generateContent?key={key}",
+                    json=payload, timeout=30
+                )
+                resp.raise_for_status()
+                data = resp.json()
+                candidate = data["candidates"][0]
+                chunk = candidate["content"]["parts"][0]["text"]
+                full_text += chunk
+                truncated = candidate.get("finishReason") == "MAX_TOKENS"
+                if not truncated or rounds >= MAX_CONTINUATION_ROUNDS:
+                    break
+                rounds += 1
+                convo = convo + [
+                    {"role": "model", "parts": [{"text": chunk}]},
+                    {"role": "user", "parts": [{"text": "Continue exactly from where you stopped. Don't repeat anything, don't restart — just keep going."}]}
+                ]
+            return full_text
         except Exception as e:
             if "404" in str(e) or "not found" in str(e).lower():
                 print(f"Gemini vision model {model} not found, trying next...")
@@ -1884,20 +1955,35 @@ def _analyze_groq_vision(image_bytes: bytes, question: str) -> str:
         raise Exception("NO_KEYS: groq_vision")
     key = _rotate_key("groq", GROQ_API_KEYS)
     img_b64 = base64.b64encode(image_bytes).decode("utf-8")
-    user_text = question if question else "Is image mein jo question, problem, ya concept hai usse solve ya explain karo."
+    user_text = question if question else "Solve or explain whatever question, problem, or concept is in this image."
     client = Groq(api_key=key)
-    resp = client.chat.completions.create(
-        model="meta-llama/llama-4-scout-17b-16e-instruct",
-        max_tokens=600,
-        messages=[
-            {"role": "system", "content": IMAGE_SYSTEM_PROMPT},
-            {"role": "user", "content": [
-                {"type": "image_url", "image_url": {"url": f"data:image/jpeg;base64,{img_b64}"}},
-                {"type": "text", "text": user_text}
-            ]}
+
+    convo = [
+        {"role": "system", "content": IMAGE_SYSTEM_PROMPT},
+        {"role": "user", "content": [
+            {"type": "image_url", "image_url": {"url": f"data:image/jpeg;base64,{img_b64}"}},
+            {"type": "text", "text": user_text}
+        ]}
+    ]
+    full_text = ""
+    rounds = 0
+    while True:
+        resp = client.chat.completions.create(
+            model="meta-llama/llama-4-scout-17b-16e-instruct",
+            max_tokens=1500,
+            messages=convo
+        )
+        chunk = resp.choices[0].message.content
+        full_text += chunk
+        truncated = resp.choices[0].finish_reason == "length"
+        if not truncated or rounds >= MAX_CONTINUATION_ROUNDS:
+            break
+        rounds += 1
+        convo = convo + [
+            {"role": "assistant", "content": chunk},
+            {"role": "user", "content": "Continue exactly from where you stopped. Don't repeat anything, don't restart — just keep going."}
         ]
-    )
-    return resp.choices[0].message.content
+    return full_text
 
 def analyze_image(image_bytes: bytes, question: str = "") -> str:
     """Try Gemini vision first, fall back to Groq vision silently."""
@@ -2539,10 +2625,12 @@ async def providers_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
         ("Gemini",      _call_gemini,      GEMINI_API_KEYS),
         ("Deepseek",    _call_deepseek,    DEEPSEEK_API_KEYS),
         ("OpenRouter",  _call_openrouter,  OPENROUTER_API_KEYS),
+        ("SambaNova",   _call_sambanova,   SAMBANOVA_API_KEYS),
+        ("Together",    _call_together,    TOGETHER_API_KEYS),
         ("Nvidia",      _call_nvidia,      NVIDIA_API_KEYS),
     ]
 
-    status_msg = await update.message.reply_text("🔍 Testing all providers, ek second...")
+    status_msg = await update.message.reply_text("🔍 Testing all providers, one sec...")
     lines = ["🩺 Provider Health Check\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n"]
     for name, fn, keys in checks:
         if not keys:
@@ -2550,7 +2638,7 @@ async def providers_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
             continue
         start = datetime.now()
         try:
-            result = fn(test_msg, "You are a test bot.", 10)
+            result, _truncated = fn(test_msg, "You are a test bot.", 10)
             ms = int((datetime.now() - start).total_seconds() * 1000)
             preview = (result or "").strip()[:30]
             lines.append(f"✅ {name}: working ({ms}ms) → \"{preview}\"")
@@ -2736,7 +2824,7 @@ async def quiz_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
         "Answer: [correct option letter]\nExplanation: [brief explanation]\nPlain text mein."
     )
     try:
-        quiz_text = ai_call([{"role": "user", "content": prompt}], max_tokens=300)
+        quiz_text = ai_call([{"role": "user", "content": prompt}], max_tokens=500)
         context.user_data["last_quiz"] = quiz_text
         lines = quiz_text.strip().split("\n")
         q_lines = [l for l in lines if not l.startswith(("Answer:", "Explanation:"))]
@@ -2781,7 +2869,7 @@ async def practice_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
         "Numerical ya conceptual koi bhi. Step-by-step solution bhi do. Plain text."
     )
     try:
-        text = ai_call([{"role": "user", "content": prompt}], max_tokens=600)
+        text = ai_call([{"role": "user", "content": prompt}], max_tokens=1000)
         text = clean_response(text)
         await send(update, f"🏋️ 𝗣𝗿𝗮𝗰𝘁𝗶𝗰𝗲 𝗤𝘂𝗲𝘀𝘁𝗶𝗼𝗻:\n\n{text}")
     except Exception as e:
@@ -2906,7 +2994,7 @@ async def handle_message(update: Update, context: ContextTypes.DEFAULT_TYPE):
             "Har formula ke saath ek line mein kya represent karta hai. Plain text."
         )
         try:
-            formulas = ai_call([{"role": "user", "content": prompt}], max_tokens=600)
+            formulas = ai_call([{"role": "user", "content": prompt}], max_tokens=1200)
             formulas = clean_response(formulas)
             await send(update, f"📚 𝗙𝗼𝗿𝗺𝘂𝗹𝗮𝘀 — {mono(subject)}:\n\n{formulas}")
         except Exception as e:
