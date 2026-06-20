@@ -1202,6 +1202,31 @@ TEST BEFORE DELIVERING: "Would a smart person genuinely smirk at this?" If no �
 One attempt. Get it right."""
 
 
+QUIZ_SYSTEM_PROMPT = """You are 𝗕𝗥𝗔𝗜𝗡𝗬 — MCQ quiz generator. Accuracy is non-negotiable.
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+🌐 LANGUAGE: Mirror user's language (English / Hinglish / Hindi).
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+STRICT FORMAT (follow exactly, no extra text before/after):
+Question: [question]
+A) [option]
+B) [option]
+C) [option]
+D) [option]
+Answer: [single correct option letter — A, B, C, or D]
+Explanation: [brief, correct explanation — 1-2 lines]
+
+QUALITY STANDARDS:
+→ The fact/formula/concept tested must be 100% correct — double-check before answering
+→ Exactly one option must be unambiguously correct, the other three genuinely wrong (no trick overlaps)
+→ Question must be solvable from the info given — no missing data, no ambiguity
+→ Match the difficulty to the student's stated level — not too trivial, not olympiad-level unless asked
+→ Explanation must justify the correct answer, not just restate it
+
+No commentary, no "here's your quiz", no markdown headers. Just the question block in the exact format above."""
+
+
 SUMMARIZE_SYSTEM_PROMPT = """You are 𝗕𝗥𝗔𝗜𝗡𝗬 — expert summarizer. Extract maximum signal from minimum words.
 
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
@@ -1728,6 +1753,19 @@ def get_provider_chain(question_type: str, system_prompt: str) -> list:
             ("Groq",        _call_groq),
             ("SambaNova",   _call_sambanova),
             ("Deepseek",    _call_deepseek),
+            ("OpenRouter",  _call_openrouter),
+            ("Nvidia",      _call_nvidia),
+        ]
+
+    # ── Quiz (needs accurate facts/formulas + strict format adherence — not creative tone)
+    if system_prompt == QUIZ_SYSTEM_PROMPT:
+        return [
+            ("Gemini",      _call_gemini),
+            ("Deepseek",    _call_deepseek),
+            ("Together",    _call_together),
+            ("Cerebras",    _call_cerebras),
+            ("Groq",        _call_groq),
+            ("SambaNova",   _call_sambanova),
             ("OpenRouter",  _call_openrouter),
             ("Nvidia",      _call_nvidia),
         ]
@@ -2824,7 +2862,7 @@ async def quiz_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
         "Answer: [correct option letter]\nExplanation: [brief explanation]\nPlain text mein."
     )
     try:
-        quiz_text = ai_call([{"role": "user", "content": prompt}], max_tokens=500)
+        quiz_text = ai_call([{"role": "user", "content": prompt}], QUIZ_SYSTEM_PROMPT, max_tokens=500)
         context.user_data["last_quiz"] = quiz_text
         lines = quiz_text.strip().split("\n")
         q_lines = [l for l in lines if not l.startswith(("Answer:", "Explanation:"))]
