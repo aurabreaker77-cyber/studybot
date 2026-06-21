@@ -1757,19 +1757,26 @@ async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
 "→ Answer GK, current affairs & tech questions\n\n"
         "━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n"
         "📋 𝗖𝗼𝗺𝗺𝗮𝗻𝗱𝘀:\n"
-        "⚡ /ask       — Flash 3.1 {Fast Answer}\n"
+        "⚡ /ask       — Fast answer\n"
         "🧠 /brainy    — Deep teacher-level explanation\n"
-        "📷 /image     — Answer to the image question\n"
-        "🎯 /level     — Standard level set\n"
-        "📝 /quiz      — Random MCQ practice\n"
+        "🔢 /ask5      — 5 angles on one concept\n"
+        "📷 /image     — Solve from an image\n"
+        "🎯 /level     — Set your class level\n"
+        "📝 /quiz      — Random MCQ (tap A/B/C/D!)\n"
         "📚 /formula   — Subject formulas list\n"
         "🏋️ /practice  — Exam-style question\n"
         "📊 /progress  — Score card\n"
+        "📅 /myplan    — 7-day study plan\n"
+        "📓 /mynotes   — Your saved 👍 answers\n"
         "💡 /tip       — Study tip of the day\n"
         "🤯 /fact      — Mind-blowing fact\n"
+        "😂 /joke      — Hear a joke\n"
+        "💪 /motivate  — Personal motivation\n"
+        "📖 /define    — Dictionary for any word\n"
+        "🌐 /translate — Translate any text\n"
         "📋 /summarize — Summary of a topic\n"
         "🔍 /search    — Real-time web search\n"
-        "🗑️ /clear     — Chat history reset\n"
+        "🗑️ /clear     — Reset chat history\n"
         "ℹ️ /about     — About the bot\n"
         "━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n"
     )
@@ -1804,19 +1811,26 @@ async def help_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
     await send(update,
         "📋 𝗛𝗲𝗹𝗽 𝗠𝗲𝗻𝘂 — 𝗕𝗥𝗔𝗜𝗡𝗬\n"
         "━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n\n"
-       "⚡ /ask       — Flash 3.1 {Fast Answer}\n"
+        "⚡ /ask       — Fast answer\n"
         "🧠 /brainy    — Deep teacher-level explanation\n"
-        "📷 /image     — Answer to the image question\n"
-        "🎯 /level     — Standard level set\n"
-        "📝 /quiz      — Random MCQ practice\n"
+        "🔢 /ask5      — 5 angles on one concept\n"
+        "📷 /image     — Solve from an image\n"
+        "🎯 /level     — Set your class level\n"
+        "📝 /quiz      — Random MCQ (tap A/B/C/D!)\n"
         "📚 /formula   — Subject formulas list\n"
         "🏋️ /practice  — Exam-style question\n"
         "📊 /progress  — Score card\n"
+        "📅 /myplan    — 7-day study plan\n"
+        "📓 /mynotes   — Your saved 👍 answers\n"
         "💡 /tip       — Study tip of the day\n"
         "🤯 /fact      — Mind-blowing fact\n"
+        "😂 /joke      — Hear a joke\n"
+        "💪 /motivate  — Personal motivation boost\n"
+        "📖 /define    — Dictionary for any word\n"
+        "🌐 /translate — Translate any text\n"
         "📋 /summarize — Summary of a topic\n"
         "🔍 /search    — Real-time web search\n"
-        "🗑️ /clear     — Chat history reset\n"
+        "🗑️ /clear     — Reset chat history\n"
         "ℹ️ /about     — About the bot\n"
         "🏓 /ping      — Check bot response speed\n\n"
         "━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n"
@@ -2184,28 +2198,32 @@ async def about_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
     if await maintenance_guard(update):
         return
     await send(update,
-        "ℹ️ 𝗔𝗯𝗼𝘂𝘁 𝗕𝗥𝗔𝗜𝗡𝗬\n"
+        "ℹ️ 𝗔𝗯𝗼𝘂𝘁 𝗕𝗥𝗔𝗜𝗡𝗬 𝘃𝟳\n"
         "━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n\n"
         "🤖 𝗪𝗵𝗮𝘁 𝗜 𝗮𝗺:\n"
         "→ Multi-provider AI Study Bot\n"
         "→ Built for CET / JEE / NEET students\n"
         "→ Works in private chat + groups\n\n"
         "🧠 𝗔𝗜 𝗘𝗻𝗴𝗶𝗻𝗲:\n"
-        "→ Smart routing across 6 AI providers\n"
-        "→ Best provider auto-selected per question\n"
+        "→ Smart routing across 8 AI providers\n"
+        "→ Best provider auto-selected per question type\n"
         "→ Vision AI for image analysis\n"
-        "→ /ask: 10 chat memory | /brainy: 20 chat memory\n"
-        "→ Learns from community interactions over time\n\n"
+        "→ Persistent memory (history survives restarts)\n"
+        "→ Learns from your 👍 liked answers\n\n"
         "⚡ 𝗙𝗲𝗮𝘁𝘂𝗿𝗲𝘀:\n"
         "→ Step-by-step numericals\n"
-        "→ MCQ quiz & scoring\n"
+        "→ MCQ quiz with tap-to-answer buttons\n"
         "→ Formula sheets by subject\n"
         "→ Image question solving\n"
         "→ Study tips, facts, jokes\n"
         "→ Topic summaries\n"
-        "→ Real-time web search (/search)\n"
-        "→ Level-based answers\n"
-        "→ Group: reply to bot (left swipe) — no tag needed!\n\n"
+        "→ Real-time web search\n"
+        "→ 5-angle deep dives (/ask5)\n"
+        "→ Personalized 7-day study plan\n"
+        "→ Saved notes from your 👍 answers\n"
+        "→ Translation & word definitions\n"
+        "→ Personalized motivation\n"
+        "→ Level-based adaptive answers\n\n"
         "📊 𝗦𝘁𝗮𝘁𝘀:\n"
         "→ Speed: 1-3 second replies\n"
         "→ Message limit: Zero\n"
@@ -2271,15 +2289,26 @@ async def quiz_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
     )
     try:
         quiz_text = ai_call([{"role": "user", "content": prompt}], QUIZ_SYSTEM_PROMPT, max_tokens=500)
-        context.user_data["last_quiz"] = quiz_text
+        # Save for BOTH text-reply mode and inline-button mode
+        context.user_data["last_quiz"]        = quiz_text
+        context.user_data["last_quiz_inline"] = quiz_text
         lines = quiz_text.strip().split("\n")
         q_lines = [l for l in lines if not l.startswith(("Answer:", "Explanation:"))]
         q_lines = [clean_response(l) for l in q_lines]
-        await send(update,
+        question_display = "\n".join(q_lines)
+        # Inline A/B/C/D buttons — tap to answer, buttons disappear after
+        quiz_keyboard = InlineKeyboardMarkup([[
+            InlineKeyboardButton("A", callback_data="fb_quiz_A"),
+            InlineKeyboardButton("B", callback_data="fb_quiz_B"),
+            InlineKeyboardButton("C", callback_data="fb_quiz_C"),
+            InlineKeyboardButton("D", callback_data="fb_quiz_D"),
+        ]])
+        await update.message.reply_text(
             f"📝 𝗤𝘂𝗶𝘇 𝗧𝗶𝗺𝗲! ⚡\n\n"
-            f"{chr(10).join(q_lines)}\n\n"
+            f"{question_display}\n\n"
             f"━━━━━━━━━━━━━━━━━━\n"
-            f"👇 Send your answer: A / B / C / D"
+            f"👇 Tap your answer:",
+            reply_markup=quiz_keyboard
         )
     except Exception as e:
         logger.error(f"Quiz error: {e}")
@@ -2344,17 +2373,368 @@ async def progress_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
     else:
         emoji, remark, bar = "💪", "No worries — mistakes are how we learn!", "████▒▒▒▒▒▒"
 
+    liked_count = len(data.get("liked_notes") or [])
     await send(update,
         f"📊 𝗣𝗿𝗼𝗴𝗿𝗲𝘀𝘀 𝗥𝗲𝗽𝗼𝗿𝘁\n"
         f"━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n\n"
         f"🎯 Level: {mono(level)}\n"
         f"📅 Member since: {mono(joined)}\n\n"
-        f"✅ Sahi Answers: {mono(str(score))}\n"
+        f"✅ Correct Answers: {mono(str(score))}\n"
         f"❌ Total Attempts: {mono(str(total))}\n"
         f"📈 Accuracy: {mono(str(percent)+'%')}\n"
-        f"Score: {mono('['+bar+']')} {mono(str(percent)+'%')}\n\n"
+        f"Score: {mono('['+bar+']')} {mono(str(percent)+'%')}\n"
+        f"👍 Liked answers saved: {mono(str(liked_count))}\n\n"
         f"{emoji} {remark}"
     )
+
+
+# ── NEW: /translate ─────────────────────────────────────────
+async def translate_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    """Translate any text to English/Hindi/Hinglish on demand."""
+    if await maintenance_guard(update):
+        return
+    args = update.message.text.partition(" ")[2].strip()
+    if not args:
+        await send(update,
+            "🌐 Usage: /translate [text]\n\n"
+            "Examples:\n"
+            "→ /translate Mitochondria is the powerhouse of the cell\n"
+            "→ /translate न्यूटन का पहला नियम क्या है?\n\n"
+            "I'll detect the language and translate to English + give a Hindi explanation too!"
+        )
+        return
+    prompt = (
+        f"Translate and explain this text for a student:\n\"{args}\"\n\n"
+        "1. Detect the source language.\n"
+        "2. Give English translation (if not English).\n"
+        "3. Give a simple Hindi/Hinglish explanation of what it means in a student context.\n"
+        "Plain text, no markdown asterisks."
+    )
+    loading_msg = await update.message.reply_text(THINKING_DOTS[0])
+    loop = asyncio.get_event_loop()
+    ai_task = loop.run_in_executor(None, lambda: ai_call([{"role": "user", "content": prompt}], max_tokens=400))
+    try:
+        dot = 1
+        while not ai_task.done():
+            await safe_edit(loading_msg, THINKING_DOTS[dot % 3])
+            dot += 1
+            await asyncio.sleep(0.6)
+        result = clean_response(await ai_task)
+        await loading_msg.edit_text(f"🌐 𝗧𝗿𝗮𝗻𝘀𝗹𝗮𝘁𝗲:\n\n{result}")
+    except Exception as e:
+        logger.error(f"Translate error: {e}")
+        await loading_msg.edit_text("❌ Translation failed. Try again!")
+
+
+# ── NEW: /define ────────────────────────────────────────────
+async def define_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    """Dictionary-style definition + example for any word/concept."""
+    if await maintenance_guard(update):
+        return
+    word = update.message.text.partition(" ")[2].strip()
+    if not word:
+        await send(update,
+            "📖 Usage: /define [word or concept]\n\n"
+            "Examples:\n"
+            "→ /define entropy\n"
+            "→ /define osmosis\n"
+            "→ /define photon"
+        )
+        return
+    prompt = (
+        f"Give a concise dictionary-style definition of '{word}' for a science student.\n"
+        "Include:\n"
+        "1. Simple one-line definition\n"
+        "2. Subject/field (Physics / Chemistry / Biology / Math / General)\n"
+        "3. One real-world example or analogy\n"
+        "4. A quick memory trick (if applicable)\n"
+        "Plain text. No markdown asterisks."
+    )
+    loading_msg = await update.message.reply_text(THINKING_DOTS[0])
+    loop = asyncio.get_event_loop()
+    ai_task = loop.run_in_executor(None, lambda: ai_call([{"role": "user", "content": prompt}], max_tokens=350))
+    try:
+        dot = 1
+        while not ai_task.done():
+            await safe_edit(loading_msg, THINKING_DOTS[dot % 3])
+            dot += 1
+            await asyncio.sleep(0.6)
+        result = clean_response(await ai_task)
+        await loading_msg.edit_text(f"📖 𝗗𝗲𝗳𝗶𝗻𝗶𝘁𝗶𝗼𝗻 — {mono(word)}:\n\n{result}")
+    except Exception as e:
+        logger.error(f"Define error: {e}")
+        await loading_msg.edit_text("❌ Definition not found. Try again!")
+
+
+# ── NEW: /motivate ──────────────────────────────────────────
+async def motivate_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    """Delivers a personalized motivational message for the student."""
+    if await maintenance_guard(update):
+        return
+    user_name = update.effective_user.first_name or "champ"
+    data = get_user_data(update.effective_user.id)
+    level = data.get("level") or "student"
+    total = data.get("total", 0)
+    score = data.get("score", 0)
+
+    context_hint = ""
+    if total > 0:
+        pct = round(score / total * 100)
+        if pct < 50:
+            context_hint = f"{user_name} is struggling a bit (quiz accuracy: {pct}%), needs encouragement without sugar-coating."
+        elif pct >= 80:
+            context_hint = f"{user_name} is performing well (accuracy: {pct}%), motivate them to aim even higher."
+        else:
+            context_hint = f"{user_name} is doing okay (accuracy: {pct}%), push them to level up."
+
+    prompt = (
+        f"Give a short, powerful motivational message for {user_name}, a {level} student preparing for competitive exams.\n"
+        f"{context_hint}\n"
+        "Make it punchy, real, personal — not generic quotes. Mix English + Hinglish. 5-7 lines max."
+    )
+    loading_msg = await update.message.reply_text("💪 Loading motivation...")
+    loop = asyncio.get_event_loop()
+    ai_task = loop.run_in_executor(None, lambda: ai_call([{"role": "user", "content": prompt}], max_tokens=250))
+    try:
+        dot = 1
+        while not ai_task.done():
+            await safe_edit(loading_msg, THINKING_DOTS[dot % 3])
+            dot += 1
+            await asyncio.sleep(0.5)
+        result = clean_response(await ai_task)
+        await loading_msg.edit_text(f"💪 𝗠𝗼𝘁𝗶𝘃𝗮𝘁𝗶𝗼𝗻 𝗳𝗼𝗿 {user_name}:\n\n{result}")
+    except Exception as e:
+        logger.error(f"Motivate error: {e}")
+        await loading_msg.edit_text("❌ Failed to load motivation. You got this though 💪")
+
+
+# ── NEW: /mynotes ───────────────────────────────────────────
+async def mynotes_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    """Shows all the answers the user has 👍'd — their personal saved notes."""
+    if await maintenance_guard(update):
+        return
+    user_id = update.effective_user.id
+    load_user_into_memory(user_id, update.effective_user.first_name or "", update.effective_user.username or "")
+    data = get_user_data(user_id)
+    notes = data.get("liked_notes") or []
+    if not notes:
+        await send(update,
+            "📓 𝗬𝗼𝘂𝗿 𝗡𝗼𝘁𝗲𝘀 𝗮𝗿𝗲 𝗲𝗺𝗽𝘁𝘆!\n\n"
+            "When I answer your question, tap the 👍 button to save it here as a personal note.\n"
+            "I'll also remember what style/topics you liked for future answers!"
+        )
+        return
+    lines = [f"📓 𝗬𝗼𝘂𝗿 𝗦𝗮𝘃𝗲𝗱 𝗡𝗼𝘁𝗲𝘀 ({len(notes)} entries)\n━━━━━━━━━━━━━━━━━━━━━━━━\n"]
+    for i, note in enumerate(notes[-10:], 1):   # show last 10
+        lines.append(f"{i}. {note[:200]}")
+    lines.append("\n💡 Tap 👍 on any answer to save it here!")
+    await send(update, "\n\n".join(lines))
+
+
+# ── NEW: /myplan ────────────────────────────────────────────
+async def myplan_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    """Generates a personalized 7-day study plan based on user's level."""
+    if await maintenance_guard(update):
+        return
+    if is_group(update):
+        await send(update, "📅 Come to a private chat for your personalized plan!")
+        return
+    user_id   = update.effective_user.id
+    user_name = update.effective_user.first_name or "Student"
+    data      = get_user_data(user_id)
+    level     = data.get("level") or "Class 12"
+    subject   = update.message.text.partition(" ")[2].strip() or None
+
+    subject_hint = f"Focus on: {subject}." if subject else "Cover all subjects: Physics, Chemistry, Math, Biology."
+    prompt = (
+        f"Create a realistic 7-day study plan for {user_name}, a {level} student preparing for CET/JEE/NEET.\n"
+        f"{subject_hint}\n"
+        "Each day: morning + evening sessions, specific topics, and one revision task.\n"
+        "Keep it practical — not overwhelming. Hinglish tone. Plain text, no markdown."
+    )
+    loading_msg = await update.message.reply_text(THINKING_DOTS[0])
+    loop = asyncio.get_event_loop()
+    ai_task = loop.run_in_executor(None, lambda: ai_call([{"role": "user", "content": prompt}], max_tokens=1000))
+    try:
+        dot = 1
+        while not ai_task.done():
+            await safe_edit(loading_msg, THINKING_DOTS[dot % 3])
+            dot += 1
+            await asyncio.sleep(0.6)
+        result = clean_response(await ai_task)
+        await loading_msg.delete()
+        await send(update, f"📅 𝗬𝗼𝘂𝗿 𝟕-𝗗𝗮𝘆 𝗦𝘁𝘂𝗱𝘆 𝗣𝗹𝗮𝗻:\n━━━━━━━━━━━━━━━━━━━━━━━━\n\n{result}")
+    except Exception as e:
+        logger.error(f"Plan error: {e}")
+        try:
+            await loading_msg.edit_text("❌ Plan generation failed. Try again!")
+        except Exception:
+            pass
+
+
+# ── NEW: /stats (owner-only) ────────────────────────────────
+async def stats_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    """Owner-only: Live bot stats — active users, total interactions, provider keys, etc."""
+    if not is_owner(update):
+        await send(update, "🔒 Owner only!")
+        return
+    total_users_db    = supabase_user_count()
+    active_session    = len(user_conversations)
+    total_interactions = len(interaction_log)
+    keys_summary = (
+        f"Groq:{len(GROQ_API_KEYS)} Gemini:{len(GEMINI_API_KEYS)} "
+        f"Deepseek:{len(DEEPSEEK_API_KEYS)} Cerebras:{len(CEREBRAS_API_KEYS)}\n"
+        f"OpenRouter:{len(OPENROUTER_API_KEYS)} SambaNova:{len(SAMBANOVA_API_KEYS)} "
+        f"Together:{len(TOGETHER_API_KEYS)} Nvidia:{len(NVIDIA_API_KEYS)} "
+        f"Tavily:{len(TAVILY_API_KEYS)}"
+    )
+    feedback_pending = len(pending_feedback)
+    await send(update,
+        f"📊 𝗟𝗶𝘃𝗲 𝗕𝗼𝘁 𝗦𝘁𝗮𝘁𝘀\n"
+        f"━━━━━━━━━━━━━━━━━━━━━━━━\n\n"
+        f"👥 Total users (Supabase): {mono(str(total_users_db))}\n"
+        f"🟢 Active sessions (RAM):  {mono(str(active_session))}\n"
+        f"💬 Interactions logged:    {mono(str(total_interactions))}\n"
+        f"⏳ Pending feedback items: {mono(str(feedback_pending))}\n"
+        f"🔧 Maintenance mode: {'ON 🔴' if MAINTENANCE_MODE else 'OFF 🟢'}\n\n"
+        f"🔑 API Keys:\n{keys_summary}"
+    )
+
+
+# ── NEW: /ask5 ───────────────────────────────────────────────
+async def ask5_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    """Answers a question using 5 different AI perspectives / approaches."""
+    if await maintenance_guard(update):
+        return
+    question = update.message.text.partition(" ")[2].strip()
+    if not question:
+        await send(update,
+            "🧠 Usage: /ask5 [question]\n\n"
+            "Gets 5 different angles/explanations for the same concept.\n"
+            "Example: /ask5 What is entropy?"
+        )
+        return
+    prompt = (
+        f"Answer this question from 5 different angles/approaches, each clearly labeled:\n\"{question}\"\n\n"
+        "1. Simple (beginner-friendly, with analogy)\n"
+        "2. Technical (precise scientific definition)\n"
+        "3. Exam angle (what JEE/NEET/CET would ask)\n"
+        "4. Real-world application (where you see this in daily life)\n"
+        "5. Memory trick (how to never forget this)\n\n"
+        "Hinglish tone. Plain text, no markdown asterisks."
+    )
+    await _run_ai(update, [{"role": "user", "content": prompt}], BRAINY_SYSTEM_PROMPT, 1200, source="ask5")
+
+
+
+# ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+#   INLINE BUTTON CALLBACK HANDLER (👍 / 👎 + quiz inline)
+# ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+async def handle_callback_query(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
+    """
+    Handles ALL inline keyboard button presses.
+    — 👍 / 👎 feedback: removes the buttons instantly, logs/saves the feedback.
+    — Any other data: ignored (safe fallback).
+    """
+    query = update.callback_query
+    if not query:
+        return
+
+    # Always acknowledge to Telegram first (stops the loading spinner on the button)
+    await query.answer()
+
+    data     = query.data or ""
+    user_id  = query.from_user.id if query.from_user else None
+    msg_id   = query.message.message_id if query.message else None
+
+    # ── 👍 / 👎 feedback ─────────────────────────────────────
+    if data in ("fb_up", "fb_down"):
+        # Remove the buttons immediately — one-shot interaction
+        try:
+            await query.edit_message_reply_markup(reply_markup=None)
+        except Exception as e:
+            # "Message is not modified" is fine; anything else log & continue
+            if "not modified" not in str(e).lower():
+                logger.warning(f"Could not remove feedback buttons: {e}")
+
+        target = pending_feedback.get(msg_id) if msg_id else None
+
+        if data == "fb_up" and target and user_id == target.get("user_id"):
+            # Save the liked answer into the user's personal liked_notes for future context
+            user_store = user_data_store.get(user_id, {})
+            liked = user_store.setdefault("liked_notes", [])
+            note  = f"Q: {target['question'][:100]} | A: {target['answer'][:200]}"
+            if note not in liked:
+                liked.append(note)
+            # Cap at MAX_LIKED_NOTES
+            if len(liked) > MAX_LIKED_NOTES:
+                user_store["liked_notes"] = liked[-MAX_LIKED_NOTES:]
+            save_user_memory_async(user_id)
+            # Save to shared interaction log too
+            save_interaction(user_id, target["question"], target["answer"], "feedback_liked")
+            print(f"👍 from {user_id} on msg {msg_id}")
+
+        elif data == "fb_down" and target and user_id == target.get("user_id"):
+            print(f"👎 from {user_id} on msg {msg_id}")
+
+        # Clean up memory regardless
+        if msg_id and msg_id in pending_feedback:
+            del pending_feedback[msg_id]
+
+        return
+
+    # ── Inline quiz answer buttons (fb_quiz_A / fb_quiz_B etc.) ──
+    if data.startswith("fb_quiz_"):
+        chosen = data.replace("fb_quiz_", "").upper()
+        last_quiz = context.user_data.get("last_quiz_inline")
+        if not last_quiz:
+            await query.answer("⚠️ Quiz expired — send /quiz for a new one!", show_alert=True)
+            return
+        correct_ans = ""
+        explanation = ""
+        for line in last_quiz.split("\n"):
+            if line.startswith("Answer:"):
+                correct_ans = line.replace("Answer:", "").strip().upper()
+            if line.startswith("Explanation:"):
+                explanation = clean_response(line.replace("Explanation:", "").strip())
+        user_store = user_data_store.get(user_id, {})
+        user_store.setdefault("score", 0)
+        user_store.setdefault("total", 0)
+        user_store["total"] += 1
+        if correct_ans and chosen == correct_ans[0]:
+            user_store["score"] += 1
+            result_text = (
+                f"✅ 𝗖𝗼𝗿𝗿𝗲𝗰𝘁! 🎉\n\n"
+                f"💡 {explanation}\n\n"
+                f"📊 Score: {user_store['score']}/{user_store['total']}"
+            )
+        else:
+            result_text = (
+                f"❌ 𝗪𝗿𝗼𝗻𝗴!\n\n"
+                f"✅ Correct answer: {correct_ans}\n"
+                f"💡 {explanation}\n\n"
+                f"📊 Score: {user_store['score']}/{user_store['total']}\n"
+                f"💪 Mistakes = learning!"
+            )
+        # Remove buttons and update the quiz message with the result
+        try:
+            original_text = query.message.text or ""
+            await query.edit_message_text(
+                text=original_text + "\n\n" + result_text,
+                reply_markup=None
+            )
+        except Exception:
+            try:
+                await query.edit_message_reply_markup(reply_markup=None)
+            except Exception:
+                pass
+            if query.message:
+                await query.message.reply_text(result_text)
+        context.user_data.pop("last_quiz_inline", None)
+        save_user_memory_async(user_id)
+        return
+
 
 # ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 #   MESSAGE HANDLER
@@ -2509,9 +2889,9 @@ async def post_init(application: Application) -> None:
 
 def main():
     print("=" * 55)
-    print("  ⚡ BRAINY Study Bot v6.0 Starting...  ")
+    print("  ⚡ BRAINY Study Bot v7.0 Starting...  ")
     print("  🧠 Cerebras + Groq + Gemini + DeepSeek + OpenRouter ")
-    print("  🔍 Tavily Search | Bold Fix | Fallbacks | /providers ")
+    print("  🔍 Tavily Search | Inline Quiz | Feedback Fix | /ask5 ")
     print("=" * 55)
 
     app = (
@@ -2550,7 +2930,17 @@ def main():
     app.add_handler(CommandHandler("joke",        joke_command))
     app.add_handler(CommandHandler("summarize",   summarize_command))
     app.add_handler(CommandHandler("search",      search_command))
+    app.add_handler(CommandHandler("translate",   translate_command))
+    app.add_handler(CommandHandler("define",      define_command))
+    app.add_handler(CommandHandler("motivate",    motivate_command))
+    app.add_handler(CommandHandler("mynotes",     mynotes_command))
+    app.add_handler(CommandHandler("myplan",      myplan_command))
+    app.add_handler(CommandHandler("stats",       stats_command))
+    app.add_handler(CommandHandler("ask5",        ask5_command))
     app.add_handler(level_handler)
+
+    # Inline button callbacks (👍 / 👎 feedback, quiz inline buttons, etc.)
+    app.add_handler(CallbackQueryHandler(handle_callback_query))
 
     app.add_handler(MessageHandler(
         filters.PHOTO | filters.Document.IMAGE,
