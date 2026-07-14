@@ -1,0 +1,8 @@
+env/
+venv/
+.env
+web_history.db
+__pycache__/
+*.pyc
+*.pyo
+*.db
