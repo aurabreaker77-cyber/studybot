@@ -1,2 +1,0 @@
-# Footer added to every message
-FOOTER = "\n\n▀▄▀▄▀▄▀▄▀▄▀▄▀▄▀▄▀▄▀\nDEV by:- @shreyanshhh_08"
