@@ -273,8 +273,8 @@ body {
     background: var(--bg-secondary);
     border: 1px solid var(--border-color);
     border-radius: 8px;
-    width: 40px;
-    height: 40px;
+    width: 44px;
+    height: 44px;
     flex-direction: column;
     justify-content: center;
     align-items: center;
@@ -568,10 +568,44 @@ body {
     background-color: rgba(248, 81, 73, 0.1);
 }
 
+/* Toast notifications */
+.toast-stack {
+    position: fixed;
+    bottom: calc(20px + env(safe-area-inset-bottom));
+    left: 50%;
+    transform: translateX(-50%);
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    z-index: 3000;
+    width: min(90vw, 380px);
+    pointer-events: none;
+}
+
+.toast {
+    background-color: var(--bg-secondary);
+    border: 1px solid var(--border-color);
+    border-left: 3px solid var(--error-color);
+    color: var(--text-primary);
+    padding: 12px 16px;
+    border-radius: 10px;
+    font-size: 13.5px;
+    box-shadow: 0 8px 24px rgba(0,0,0,0.35);
+    animation: toast-in 0.25s ease;
+}
+
+.toast.toast-info { border-left-color: var(--accent-color); }
+
+@keyframes toast-in {
+    from { opacity: 0; transform: translateY(10px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+
 /* Messages viewport list */
 .messages-viewport {
     flex-grow: 1;
     overflow-y: auto;
+    -webkit-overflow-scrolling: touch; /* momentum scroll on iOS */
     padding: 25px 0;
     display: flex;
     flex-direction: column;
@@ -896,10 +930,10 @@ body {
     outline: none;
     color: var(--text-primary);
     font-family: inherit;
-    font-size: 14.5px;
+    font-size: 16px; /* must stay >=16px or iOS Safari zooms in on focus */
     resize: none;
     max-height: 200px;
-    line-height: 1.5;
+    line-height: 1.4;
     padding: 4px 0;
 }
 
@@ -924,8 +958,8 @@ body {
     color: #0d1117;
     border: none;
     border-radius: 10px;
-    width: 32px;
-    height: 32px;
+    width: 44px;
+    height: 44px;
     display: flex;
     align-items: center;
     justify-content: center;
@@ -1118,6 +1152,7 @@ body {
         bottom: 0;
         transform: translateX(-100%);
         box-shadow: 10px 0 30px rgba(0,0,0,0.5);
+        z-index: 1000; /* above .sidebar-backdrop (999) */
     }
 
     .sidebar-container.open {
@@ -1153,6 +1188,33 @@ body {
         align-items: stretch;
         text-align: center;
     }
+
+    /* Safe-area support for notched phones */
+    .chat-input-container {
+        padding-bottom: calc(20px + env(safe-area-inset-bottom));
+    }
+
+    .sidebar-container {
+        padding-top: env(safe-area-inset-top);
+    }
+
+    /* Backdrop behind the mobile sidebar so tapping outside closes it,
+       and so it's visually clear the rest of the page is inactive. */
+    .sidebar-backdrop {
+        display: none;
+        position: fixed;
+        inset: 0;
+        background: rgba(0, 0, 0, 0.5);
+        backdrop-filter: blur(2px);
+        z-index: 999; /* below sidebar (1000+), above everything else */
+        opacity: 0;
+        transition: opacity 0.25s ease;
+    }
+
+    .sidebar-backdrop.open {
+        display: block;
+        opacity: 1;
+    }
 }
 
 </style>
@@ -1160,6 +1222,9 @@ body {
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
 </head>
 <body>
+    <!-- Toast notifications -->
+    <div id="toast-stack" class="toast-stack"></div>
+
     <!-- Loading overlay -->
     <div id="loading-overlay" class="overlay">
         <div class="spinner-container">
@@ -1219,6 +1284,7 @@ body {
         </button>
 
         <!-- Sidebar -->
+        <div id="sidebar-backdrop" class="sidebar-backdrop"></div>
         <aside id="sidebar" class="sidebar-container">
             <div class="sidebar-header">
                 <div class="sidebar-logo">
@@ -1427,6 +1493,31 @@ body {
     <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/plugins/autoloader/prism-autoloader.min.js"></script>
     <script>
 // Initialize variables
+// ── GLOBAL ERROR HANDLING ──
+// Catches JS exceptions and unhandled promise rejections that would
+// otherwise silently break the UI, and surfaces a toast instead of a
+// blank/frozen screen. Errors still log to console for debugging.
+window.onerror = function (message, source, lineno, colno, error) {
+    console.error("Global error:", { message, source, lineno, colno, error });
+    showToast("Something went wrong. Try refreshing if the app feels stuck.");
+    return true; // prevent default browser error overlay
+};
+
+window.addEventListener("unhandledrejection", (event) => {
+    console.error("Unhandled promise rejection:", event.reason);
+    showToast("Something went wrong. Try refreshing if the app feels stuck.");
+});
+
+function showToast(message, type = "error") {
+    const stack = document.getElementById("toast-stack");
+    if (!stack) return; // fail silently rather than throwing inside an error handler
+    const toast = document.createElement("div");
+    toast.className = `toast toast-${type}`;
+    toast.textContent = message;
+    stack.appendChild(toast);
+    setTimeout(() => toast.remove(), 3500);
+}
+
 let activeSessionId = null;
 let telegramUser = null;
 let initDataRaw = null;
@@ -1443,6 +1534,7 @@ const desktopLoginStatus = document.getElementById("desktop-login-status");
 
 const sidebar = document.getElementById("sidebar");
 const sidebarToggle = document.getElementById("sidebar-toggle");
+const sidebarBackdrop = document.getElementById("sidebar-backdrop");
 const newChatBtn = document.getElementById("new-chat-btn");
 const historyItems = document.getElementById("history-items");
 const activeChatTitle = document.getElementById("active-chat-title");
@@ -1484,6 +1576,13 @@ document.addEventListener("DOMContentLoaded", () => {
     // Mobile Sidebar Toggle
     sidebarToggle.addEventListener("click", () => {
         sidebar.classList.toggle("open");
+        sidebarBackdrop.classList.toggle("open");
+    });
+
+    // Tap outside sidebar (on backdrop) to close it
+    sidebarBackdrop.addEventListener("click", () => {
+        sidebar.classList.remove("open");
+        sidebarBackdrop.classList.remove("open");
     });
 
     // New Chat Click
@@ -1921,11 +2020,13 @@ async function sendMessage() {
         } else {
             appendMessageBubble("assistant", "❌ Failed to get response. Please try again.");
             scrollToBottom();
+            showToast("Failed to get a response. Please try again.");
         }
     } catch (e) {
         typingIndicator.classList.add("hidden");
         appendMessageBubble("assistant", "❌ Network error. Check your connection.");
         scrollToBottom();
+        showToast("Network error. Check your connection.");
         console.error("Send message error:", e);
     }
 }
@@ -1944,7 +2045,14 @@ function autoSizeTextarea() {
 }
 
 function scrollToBottom() {
-    chatMessagesContainer.scrollTop = chatMessagesContainer.scrollHeight;
+    // Double rAF: wait for the browser to actually paint the new message
+    // (innerHTML/appendChild updates aren't reflected in scrollHeight until
+    // the next paint cycle) before reading scrollHeight.
+    requestAnimationFrame(() => {
+        requestAnimationFrame(() => {
+            chatMessagesContainer.scrollTop = chatMessagesContainer.scrollHeight;
+        });
+    });
 }
 
 // ── PROFILE STATS & MODALS ──
