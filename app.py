@@ -12,6 +12,12 @@ from flask import Flask, request, jsonify, session, send_from_directory
 # Import AI + Supabase helpers from study_bot (same Supabase project the Telegram bot uses)
 import study_bot
 
+# Security module — input sanitization, rate limiting, blacklist, headers
+from security import (
+    security_guard, login_required, sanitize_input,
+    is_blacklisted, check_rate_limit, log_security_event, security_headers
+)
+
 app = Flask(__name__)
 # IMPORTANT: set a real FLASK_SECRET_KEY env var on Railway. This key signs the session
 # cookie. The cookie only ever holds a user_id — never a password or token — and Flask
@@ -19,6 +25,13 @@ app = Flask(__name__)
 # localStorage/sessionStorage. Nothing is stored in browser cache beyond that one signed
 # cookie, and it's useless without the secret key living on the server.
 app.secret_key = os.getenv("FLASK_SECRET_KEY", "brainy_secret_super_key_123")
+app.config["SESSION_COOKIE_HTTPONLY"] = True
+app.config["SESSION_COOKIE_SAMESITE"] = "Lax"
+app.config["PERMANENT_SESSION_LIFETIME"] = 86400  # 24 hours
+
+@app.after_request
+def apply_security_headers(response):
+    return security_headers(response)
 
 SUPABASE_URL = study_bot.SUPABASE_URL
 SUPABASE_KEY = study_bot.SUPABASE_KEY
@@ -264,13 +277,7 @@ def auth_logout():
     return jsonify({"status": "logged_out"})
 
 
-def login_required(f):
-    @wraps(f)
-    def decorated_function(*args, **kwargs):
-        if "user_id" not in session:
-            return jsonify({"error": "Unauthorized"}), 401
-        return f(*args, **kwargs)
-    return decorated_function
+# login_required and security_guard are imported from security.py
 
 
 # ── CHAT SESSION APIS ──
@@ -340,10 +347,12 @@ def get_chat_history(session_id):
 
 @app.route("/api/chat/send", methods=["POST"])
 @login_required
+@security_guard
 def send_message():
     user_id = session["user_id"]
     first_name = session["first_name"]
     username = session["username"]
+    ip = request.remote_addr or "unknown"
 
     data = request.json or {}
     session_id = data.get("session_id")
@@ -351,6 +360,19 @@ def send_message():
 
     if not session_id or not content:
         return jsonify({"error": "Missing session_id or content"}), 400
+
+    # Sanitize user input
+    content = sanitize_input(content)
+
+    # Blacklist check
+    if is_blacklisted(content):
+        log_security_event("blacklist_blocked", ip, user_id, content[:100])
+        return jsonify({"error": "Invalid input detected."}), 403
+
+    # Per-user rate limit: 10 messages per minute
+    if not check_rate_limit("user_{}".format(user_id), limit=10, window=60):
+        log_security_event("user_rate_limit", ip, user_id, "")
+        return jsonify({"error": "Message limit reached. Please wait a moment."}), 429
 
     sess = sb_get_session(session_id, user_id)
     if not sess:
