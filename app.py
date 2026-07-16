@@ -1,4 +1,5 @@
 import os
+import re
 import uuid
 import hmac
 import hashlib
@@ -90,6 +91,20 @@ def handle_uncaught(e):
 SUPABASE_URL = study_bot.SUPABASE_URL
 SUPABASE_KEY = study_bot.SUPABASE_KEY
 MESSAGE_LIMIT = 50
+
+def format_for_web(text: str) -> str:
+    """
+    Light-touch formatting applied ONLY to what the web app displays (never
+    touches what's stored in Supabase or sent to Telegram). clean_response()
+    already handles code blocks / Unicode bold / italics fine on web thanks
+    to the .message-bubble { white-space: pre-wrap } CSS rule — this just
+    upgrades plain "- item" / "* item" markdown-style bullets into a real
+    bullet character so lists don't look like stray dashes in the chat UI.
+    """
+    if not text:
+        return text
+    return re.sub(r'^[ \t]*[-*][ \t]+', '• ', text, flags=re.MULTILINE)
+
 
 # In-memory browser auth handshake sessions (short-lived, just for the login flow):
 # { session_id: { "status": "pending"|"authenticated", "user": { ... } } }
@@ -390,6 +405,9 @@ def get_chat_history(session_id):
         return jsonify({"error": "Session not found"}), 404
 
     messages = sb_get_messages(session_id)
+    for m in messages:
+        if m.get("role") == "assistant":
+            m["content"] = format_for_web(m["content"])
     user_msg_count = sum(1 for m in messages if m["role"] == "user")
 
     return jsonify({
@@ -560,7 +578,7 @@ def send_message():
 
     return jsonify({
         "role": "assistant",
-        "content": response_text,
+        "content": format_for_web(response_text),
         "new_title": title_updated,
         "user_message_count": new_count,
         "message_limit": MESSAGE_LIMIT
