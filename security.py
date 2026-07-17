@@ -6,6 +6,7 @@
 import re
 import time
 import os
+import random
 from functools import wraps
 from flask import request, jsonify, session
 
@@ -102,7 +103,25 @@ def check_rate_limit(identifier: str, limit: int = 100, window: int = 60) -> boo
         return False
 
     rate_limits[identifier].append(now)
+
+    # Prevent unbounded growth: with many unique IPs over a long uptime,
+    # rate_limits/blocked_ips would otherwise never shrink. Sweep
+    # occasionally rather than on every call (cheap amortized cost).
+    if random.random() < 0.01:
+        _cleanup_rate_limit_state(now)
+
     return True
+
+
+def _cleanup_rate_limit_state(now: float = None) -> None:
+    """Drops empty/expired entries from the in-memory rate-limit state.
+    Called probabilistically from check_rate_limit — not required for
+    correctness, only to bound memory use over long-running processes."""
+    now = now if now is not None else time.time()
+    for key in [k for k, v in rate_limits.items() if not v]:
+        del rate_limits[key]
+    for key in [k for k, until in blocked_ips.items() if until <= now]:
+        del blocked_ips[key]
 
 
 def block_ip(ip: str, duration: int = 86400) -> None:
