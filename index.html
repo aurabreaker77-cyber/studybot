@@ -1522,6 +1522,8 @@ let initDataRaw = null;
 let authPollInterval = null;
 let currentMessageCount = 0;
 let currentMessageLimit = 50;
+let lastRenderedMessageCount = 0;   // used by cross-platform sync polling (Telegram ↔ Web)
+let syncPollInterval = null;
 
 // DOM Elements
 const loadingOverlay = document.getElementById("loading-overlay");
@@ -1714,6 +1716,9 @@ function loginSuccess() {
     // Load chat logs & stats
     initializeChatOnOpen();
     loadProfileStats();
+
+    // Start background polling so Telegram-side replies show up here too
+    startSyncPolling();
 }
 
 // Every time the mini app / page is opened, we start a fresh chat
@@ -1809,8 +1814,11 @@ async function selectSession(sessionId, title) {
     activeSessionId = sessionId;
     activeChatTitle.innerText = title;
 
-    // Close mobile sidebar if open
+    // Close mobile sidebar if open (and its blur backdrop — this was the bug:
+    // backdrop stayed "open" after tapping a history item, leaving the main
+    // chat permanently blurred until manually re-toggled)
     sidebar.classList.remove("open");
+    sidebarBackdrop.classList.remove("open");
 
     // Update active highlight class
     document.querySelectorAll(".history-item").forEach(item => {
@@ -1827,12 +1835,44 @@ async function selectSession(sessionId, title) {
         if (resp.ok) {
             const data = await resp.json();
             renderMessages(data.messages);
+            lastRenderedMessageCount = data.messages.length;
             updateMessageCounter(data.user_message_count, data.message_limit);
         }
     } catch (e) {
         console.error("Load chat history failed:", e);
     }
 }
+
+// ── CROSS-PLATFORM SYNC (Telegram ↔ Web) ──
+// Both platforms write into the same Supabase chat_sessions/chat_messages
+// tables. This tab has no live socket, so it polls the active session every
+// few seconds and silently re-renders if new messages showed up from the
+// Telegram bot (or another tab) — no full reload, no visible flicker if
+// nothing changed.
+async function pollForSyncedMessages() {
+    if (!activeSessionId || document.hidden) return;
+    try {
+        const resp = await fetch(`/api/chat/${activeSessionId}`);
+        if (!resp.ok) return;
+        const data = await resp.json();
+        if (data.messages.length !== lastRenderedMessageCount) {
+            renderMessages(data.messages);
+            lastRenderedMessageCount = data.messages.length;
+            updateMessageCounter(data.user_message_count, data.message_limit);
+        }
+    } catch (e) {
+        // Silent — this is a background sync check, not a user-initiated action
+    }
+}
+
+function startSyncPolling() {
+    if (syncPollInterval) clearInterval(syncPollInterval);
+    syncPollInterval = setInterval(pollForSyncedMessages, 6000);
+}
+
+document.addEventListener("visibilitychange", () => {
+    if (!document.hidden) pollForSyncedMessages();
+});
 
 // ── MESSAGE LIMIT UI ──
 
@@ -2006,6 +2046,7 @@ async function sendMessage() {
             appendMessageBubble("assistant", data.content);
             scrollToBottom();
             updateMessageCounter(data.user_message_count, data.message_limit);
+            lastRenderedMessageCount += 2; // user + assistant bubble we just appended locally
 
             // If session title was updated, reload sidebar
             if (data.new_title) {
