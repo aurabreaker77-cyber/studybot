@@ -98,6 +98,14 @@ BrainyAi/
     ├── quiz_prompt.txt
     ├── ask5_prompt.txt
     └── ... (14 more specialized prompts)
+├── fonts/ font files 
+│ ├── math_symbols.txt
+│ ├── mono_font_unicode.txt
+│ ├── bold_font_unicode.txt
+│ ├── italic_font_unicode.txt
+│ ├── greek_letters.txt
+│ ├── math_operators.txt
+└── ... (more)
 ```
 
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
