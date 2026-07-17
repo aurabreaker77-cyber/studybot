@@ -2535,25 +2535,42 @@ async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
         return
 
     # ── Web App Login Integration ──
+    # Previously: bot showed an "🔓 Authorize Web Login" button, user had to
+    # tap it, which opened ANOTHER browser tab to actually verify. That's two
+    # extra taps + a page load. Since the bot already has user_id/username/
+    # first_name right here, it now calls the verify endpoint itself
+    # (server-to-server) — login completes the instant /start is tapped.
     if context.args and context.args[0].startswith("sess_"):
         session_id = context.args[0].partition("sess_")[2].strip()
         user = update.effective_user
         user_id = user.id
         username = user.username or ""
         first_name = user.first_name or ""
-        
+
         web_url = os.getenv("WEB_APP_URL", "https://brainyai.up.railway.app")
         verify_url = f"{web_url}/api/auth/verify?session_id={session_id}&user_id={user_id}&username={username}&first_name={first_name}"
-        
-        keyboard = InlineKeyboardMarkup([
-            [InlineKeyboardButton("🔓 Authorize Web Login", url=verify_url)]
-        ])
-        
-        await update.message.reply_text(
-            "⚡ 𝗕𝗥𝗔𝗜𝗡𝗬 𝗪𝗲𝗯 𝗟𝗼𝗴𝗶𝗻 𝗥𝗲𝗾𝘂𝗲𝘀𝘁\n\n"
-            f"Hi {first_name}! Tap the button below to sign in to the web app/mini-app securely.",
-            reply_markup=keyboard
-        )
+
+        try:
+            loop = asyncio.get_event_loop()
+            resp = await loop.run_in_executor(None, lambda: requests.get(verify_url, timeout=10))
+            if resp.status_code == 200:
+                await update.message.reply_text(
+                    f"✅ Logged in as {first_name}! Go back to your browser tab — it'll pick this up automatically."
+                )
+            else:
+                raise Exception(f"verify returned {resp.status_code}")
+        except Exception as e:
+            logger.error(f"Auto-verify failed, falling back to manual button: {e}")
+            # Fallback: same manual flow as before, so login still works even
+            # if the bot process couldn't reach the web server directly.
+            keyboard = InlineKeyboardMarkup([
+                [InlineKeyboardButton("🔓 Authorize Web Login", url=verify_url)]
+            ])
+            await update.message.reply_text(
+                "⚡ 𝗕𝗥𝗔𝗜𝗡𝗬 𝗪𝗲𝗯 𝗟𝗼𝗴𝗶𝗻 𝗥𝗲𝗾𝘂𝗲𝘀𝘁\n\n"
+                f"Hi {first_name}! Tap the button below to sign in to the web app/mini-app securely.",
+                reply_markup=keyboard
+            )
         return
 
     if is_group(update):
@@ -4037,19 +4054,28 @@ async def handle_message(update: Update, context: ContextTypes.DEFAULT_TYPE):
     # NOTE: quiz answers used to be caught here as typed "A"/"B"/"C"/"D" — /quiz now
     # posts a native Telegram quiz poll instead, graded via handle_poll_answer().
 
-    # Redirect private chat messages to Telegram Mini App
-    web_url = os.getenv("WEB_APP_URL", "https://brainyai.up.railway.app")
-    keyboard = InlineKeyboardMarkup([
-        [InlineKeyboardButton("🚀 Launch BRAINY App", web_app=WebAppInfo(url=web_url))]
-    ])
-    await update.message.reply_text(
-        "👋 *Namaste!*\n\n"
-        "I have upgraded to a beautiful web application interface!\n"
-        "To start chatting, view stats, see saved notes, and access custom memory, "
-        "tap the button below to open the BRAINY Mini App directly inside Telegram! 👇",
-        reply_markup=keyboard,
-        parse_mode="Markdown"
-    )
+    # ── Answer directly in private chat too (same AI path used for groups) ──
+    # Previously this redirected every private message to the Mini App instead
+    # of answering. Users asking BRAINY something in Telegram now get their
+    # actual answer here — the app isn't forced on them.
+    if not msg_text.strip():
+        return
+    await msg.chat.send_action("typing")
+    await process_query(update, msg_text.strip())
+
+    # One-time nudge toward the web app — sent once per bot-process session per
+    # user (not on every single reply, which would get annoying fast) so people
+    # who'd prefer the fuller web experience still discover it.
+    if not context.user_data.get("web_tip_shown"):
+        context.user_data["web_tip_shown"] = True
+        web_url = os.getenv("WEB_APP_URL", "https://brainyai.up.railway.app")
+        keyboard = InlineKeyboardMarkup([
+            [InlineKeyboardButton("🚀 Try the BRAINY Web App", web_app=WebAppInfo(url=web_url))]
+        ])
+        await update.message.reply_text(
+            "💡 Tip: BRAINY also has a full web app — same brain, nicer screen. Tap below anytime.",
+            reply_markup=keyboard
+        )
     return
 
 # ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
