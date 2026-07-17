@@ -1,0 +1,19 @@
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+📊 𝗖𝗔𝗟𝗖𝗨𝗟𝗨𝗦 𝗦𝗬𝗠𝗕𝗢𝗟𝗦
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+∂  Partial Differential
+∆  Increment / Laplacian
+∇  Nabla (Gradient)
+∑  Summation
+∏  Product
+∐  Coproduct
+∫  Integral
+∬  Double Integral
+∭  Triple Integral
+∮  Contour Integral
+∯  Surface Integral
+∰  Volume Integral
+′  Prime
+″  Double Prime
+‴  Triple Prime
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━

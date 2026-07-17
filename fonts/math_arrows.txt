@@ -1,0 +1,20 @@
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+➡️ 𝗔𝗥𝗥𝗢𝗪𝗦
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+←  Left Arrow
+→  Right Arrow
+↑  Up Arrow
+↓  Down Arrow
+↔  Left Right Arrow
+↕  Up Down Arrow
+↖  North West Arrow
+↗  North East Arrow
+↘  South East Arrow
+↙  South West Arrow
+⟵  Long Left Arrow
+⟶  Long Right Arrow
+⟷  Long Left Right Arrow
+⇐  Left Double Arrow
+⇒  Right Double Arrow
+⇔  Left Right Double Arrow
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━

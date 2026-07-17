@@ -1,0 +1,82 @@
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+📐 𝗠𝗔𝗧𝗛𝗘𝗠𝗔𝗧𝗜𝗖𝗔𝗟 𝗦𝗬𝗠𝗕𝗢𝗟𝗦 𝗥𝗘𝗙𝗘𝗥𝗘𝗡𝗖𝗘
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+🔤 GREEK LETTERS
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Α α Alpha        Β β Beta         Γ γ Gamma
+Δ δ Delta        Ε ε Epsilon      Ζ ζ Zeta
+Η η Eta          Θ θ Theta        Ι ι Iota
+Κ κ Kappa        Λ λ Lambda       Μ μ Mu
+Ν ν Nu           Ξ ξ Xi           Ο ο Omicron
+Π π Pi           Ρ ρ Rho          Σ σ ς Sigma
+Τ τ Tau          Υ υ Upsilon      Φ φ Phi
+Χ χ Chi          Ψ ψ Psi          Ω ω Omega
+
+🔢 BASIC OPERATORS
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
++  Plus          −  Minus         ×  Multiply
+÷  Divide        ±  Plus-Minus    ∓  Minus-Plus
+∗  Asterisk      ∙  Bullet        ∘  Ring
+√  Square Root   ∛  Cube Root     ∜  Fourth Root
+∞  Infinity      ∝  Proportional  ∠  Angle
+∡  Measured      ∢  Spherical     ∣  Divides
+∤  Not Divides   ∥  Parallel      ∦  Not Parallel
+
+🔣 LOGIC & SETS
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+∀  For All       ∃  Exists        ∄  Not Exists
+∅  Empty Set     ∈  Element Of    ∉  Not Element
+∋  Contains      ∌  Not Contains  ∧  Logical And
+∨  Logical Or    ∩  Intersection  ∪  Union
+⊂  Subset        ⊃  Superset      ⊆  Subset Eq
+⊇  Superset Eq   ⊕  Circled Plus  ⊖  Circled Minus
+⊗  Circled Times ⊘  Circled Div   ⊙  Circled Dot
+⊚  Circled Ring
+
+🔀 RELATIONS
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+∼  Similar To    ≃  Approx Eq     ≈  Almost Eq
+≠  Not Equal     ≡  Identical     ≤  Less Than Eq
+≥  Greater Eq    ≪  Much Less     ≫  Much Greater
+⊢  Right Tack    ⊣  Left Tack     ⊤  Top (True)
+⊥  Bottom (False) ⊨  Models
+
+➡️ ARROWS
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+←  Left         →  Right        ↑  Up
+↓  Down         ↔  Left-Right   ↕  Up-Down
+↖  NW           ↗  NE           ↘  SE
+↙  SW           ⟵  Long Left   ⟶  Long Right
+⟷  Long LR      ⇐  Double Left ⇒  Double Right
+⇔  Double LR
+
+📊 CALCULUS
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+∂  Partial      ∆  Increment    ∇  Nabla
+∑  Summation    ∏  Product      ∐  Coproduct
+∫  Integral     ∬  Double       ∭  Triple
+∮  Contour      ∯  Surface      ∰  Volume
+′  Prime        ″  Double Prime ‴  Triple Prime
+
+🔷 GEOMETRY
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+△  Triangle     □  Square       ◇  Diamond
+○  Circle       ◯  Large Circle §  Section
+¶  Paragraph    °  Degree       ′  Arc Minute
+″  Arc Second
+
+🧮 NUMBER SETS
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+ℵ  Aleph        ℘  Weierstrass  ℜ  Real Part
+ℑ  Imag Part    ℂ  Complex      ℍ  Quaternions
+ℕ  Naturals     ℙ  Primes       ℚ  Rationals
+ℝ  Reals        ℤ  Integers
+
+💻 MONOSPACE FONT — USE FOR CODE/FORMULAS
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Uppercase: 𝙰 𝙱 𝙲 𝙳 𝙴 𝙵 𝙶 𝙷 𝙸 𝙹 𝙺 𝙻 𝙼 𝙽 𝙾 𝙿 𝚀 𝚁 𝚂 𝚃 𝚄 𝚅 𝚆 𝚇 𝚈 𝚉
+Lowercase: 𝚊 𝚋 𝚌 𝚍 𝚎 𝚏 𝚐 𝚑 𝚒 𝚓 𝚔 𝚕 𝚖 𝚗 𝚘 𝚙 𝚚 𝚛 𝚜 𝚝 𝚞 𝚟 𝚠 𝚡 𝚢 𝚣
+Digits:    𝟶 𝟷 𝟸 𝟹 𝟺 𝟻 𝟼 𝟽 𝟾 𝟿
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━

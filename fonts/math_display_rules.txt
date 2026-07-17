@@ -1,0 +1,50 @@
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+📐 𝗠𝗔𝗧𝗛 𝗗𝗜𝗦𝗣𝗟𝗔𝗬 𝗥𝗨𝗟𝗘𝗦 𝗙𝗢𝗥 𝗔𝗜 𝗥𝗘𝗦𝗣𝗢𝗡𝗦𝗘𝗦
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+1. PHYSICS FORMULAS:
+→ Force:   F = 𝚖𝚊
+→ Energy:  E = 𝚖𝚌²  (use ² not ^2)
+→ Gravity: F = 𝙶(𝚖₁𝚖₂)/𝚛²
+→ Work:    W = 𝙵𝚍 𝚌𝚘𝚜θ
+
+2. CHEMISTRY FORMULAS:
+→ pH = -𝚕𝚘𝚐[𝙷⁺]
+→ K = [𝙰][𝙱]/[𝙲][𝙳]
+→ ΔG = Δ𝙷 - 𝚃Δ𝚂
+
+3. MATHEMATICS:
+→ Quadratic: 𝚊𝚡² + 𝚋𝚡 + 𝚌 = 𝟶
+→ Integral:  ∫ 𝚏(𝚡) 𝚍𝚡
+→ Derivative: 𝚍/𝚍𝚡 (𝚡ⁿ) = 𝚗𝚡ⁿ⁻¹
+
+4. ALWAYS USE:
+→ Greek letters: α β γ δ ε θ π σ φ ω
+→ Operators: × ÷ ± √ ∞ ∫ ∑ ∏ ∂ ∇ ∆
+→ Relations: ≠ ≤ ≥ ≈ ≡ ∼ ∝
+→ Logic: ∀ ∃ ∈ ∉ ∩ ∪ ⊂ ⊃
+→ Arrows: → ← ↑ ↓ ↔ ⇒ ⇔
+
+5. NEVER USE:
+→ ^ for powers (use ² ³ ⁻¹ etc.)
+→ * for multiplication (use × or ⋅)
+→ / for division (use ÷ or fraction)
+→ <= for less-than (use ≤)
+→ >= for greater-than (use ≥)
+→ != for not-equal (use ≠)
+→ sqrt for square root (use √)
+→ inf for infinity (use ∞)
+→ alpha, beta (use α, β)
+
+6. CODE BLOCKS:
+→ Use monospace Unicode: 𝚊𝚋𝚌
+→ Don't use <code> tags
+→ Example: 𝚙𝚛𝚒𝚗𝚝("𝙷𝚎𝚕𝚕𝚘")
+
+7. VECTORS & MATRICES:
+→ Vector: 𝙫 = (𝚡, 𝚢, 𝚣)
+→ Matrix: 𝟹×𝟹 matrix (use ×)
+→ Dot: 𝙖 · 𝙗 (use · for dot product)
+→ Cross: 𝙖 × 𝙗 (use × for cross product)
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━

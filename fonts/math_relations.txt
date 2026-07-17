@@ -1,0 +1,24 @@
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+🔀 𝗠𝗔𝗧𝗛 𝗥𝗘𝗟𝗔𝗧𝗜𝗢𝗡𝗦
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+=   Equal To
+≠   Not Equal To
+≈   Almost Equal To
+≃   Approximately Equal
+≡   Identical To
+∼   Similar To
+∝   Proportional To
+≤   Less-Than Or Equal To
+≥   Greater-Than Or Equal To
+≪   Much Less-Than
+≫   Much Greater-Than
+⊂   Subset Of
+⊃   Superset Of
+⊆   Subset Or Equal To
+⊇   Superset Or Equal To
+⊢   Right Tack (Proves)
+⊣   Left Tack
+⊤   Top (True)
+⊥   Bottom (False)
+⊨   Models
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━

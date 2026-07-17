@@ -1,0 +1,35 @@
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+🔢 𝗠𝗔𝗧𝗛 𝗢𝗣𝗘𝗥𝗔𝗧𝗢𝗥𝗦
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
++  Plus
+−  Minus
+×  Multiply
+÷  Divide
+±  Plus-Minus
+∓  Minus-Plus
+∗  Asterisk Operator
+∙  Bullet Operator
+∘  Ring Operator
+√  Square Root
+∛  Cube Root
+∜  Fourth Root
+∞  Infinity
+∝  Proportional To
+∠  Angle
+∡  Measured Angle
+∢  Spherical Angle
+∣  Divides
+∤  Does Not Divide
+∥  Parallel
+∦  Not Parallel
+∧  Logical And
+∨  Logical Or
+∩  Intersection
+∪  Union
+⊕  Circled Plus
+⊖  Circled Minus
+⊗  Circled Times
+⊘  Circled Division Slash
+⊙  Circled Dot
+⊚  Circled Ring Operator
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━

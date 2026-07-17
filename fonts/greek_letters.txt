@@ -1,0 +1,50 @@
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+🔤 𝗚𝗥𝗘𝗘𝗞 𝗟𝗘𝗧𝗧𝗘𝗥𝗦 — 𝗣𝗛𝗬𝗦𝗜𝗖𝗦 & 𝗠𝗔𝗧𝗛𝗦
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+UPPERCASE           LOWERCASE           NAME
+─────────────────────────────────────────────────
+Α                   α                   Alpha
+Β                   β                   Beta
+Γ                   γ                   Gamma
+Δ                   δ                   Delta
+Ε                   ε                   Epsilon
+Ζ                   ζ                   Zeta
+Η                   η                   Eta
+Θ                   θ                   Theta
+Ι                   ι                   Iota
+Κ                   κ                   Kappa
+Λ                   λ                   Lambda
+Μ                   μ                   Mu
+Ν                   ν                   Nu
+Ξ                   ξ                   Xi
+Ο                   ο                   Omicron
+Π                   π                   Pi
+Ρ                   ρ                   Rho
+Σ                   σ (ς word-final)    Sigma
+Τ                   τ                   Tau
+Υ                   υ                   Upsilon
+Φ                   φ                   Phi
+Χ                   χ                   Chi
+Ψ                   ψ                   Psi
+Ω                   ω                   Omega
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+📌 COMMON USAGE:
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+α → Alpha particle, angular acceleration
+β → Beta particle, angle
+γ → Gamma ray, Lorentz factor
+Δ → Change, difference, Laplacian
+δ → Small change, Dirac delta
+ε → Epsilon, permittivity
+θ → Theta, angle
+λ → Lambda, wavelength
+μ → Mu, coefficient of friction
+π → Pi, constant (3.14159...)
+ρ → Rho, density
+σ → Sigma, standard deviation
+τ → Tau, torque, time constant
+φ → Phi, angle, work function
+ω → Omega, angular velocity
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
