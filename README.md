@@ -10,7 +10,7 @@
   <p><strong>A multi-provider AI assistant with a BRAINY-style web interface and Telegram Mini App integration.</strong></p>
 </div>
 
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
 ## 📝 Project Description
 
@@ -18,7 +18,7 @@
 
 Whether you need deep explanations for physics concepts, real-time web search, interactive flashcards, or just a quick joke, BRAINY handles it all natively through natural language intent detection.
 
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
 ## 🔧 Tech Stack
 
@@ -30,7 +30,7 @@ Whether you need deep explanations for physics concepts, real-time web search, i
 - **Hosting:** Railway / Render
 - **Telegram SDK:** `python-telegram-bot` v21.9
 
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
 ## ✨ Key Features
 
@@ -78,7 +78,7 @@ Whether you need deep explanations for physics concepts, real-time web search, i
 | **Session Security** | → HttpOnly, Secure, and SameSite cookie configurations |
 | **Database Security** | → Row Level Security (RLS) enabled on Supabase |
 
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
 ## 📁 Project Structure
 
@@ -98,7 +98,7 @@ BrainyAi/
     └── ... (14 more specialized prompts)
 ```
 
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
 ## 🚀 Quick Start
 
@@ -135,7 +135,7 @@ python app.py
 python study_bot.py
 ```
 
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
 ## ☁️ Deployment (Railway / Render)
 
@@ -148,7 +148,7 @@ This project is configured for easy deployment on PaaS providers like Railway or
    - `worker: python study_bot.py`
 4. Deploy and enjoy!
 
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
 ## 👥 Contributors
 
@@ -156,7 +156,7 @@ This project is configured for easy deployment on PaaS providers like Railway or
   <img src="https://contrib.rocks/image?repo=aurabreaker7/BrainyAi" />
 </a>
 
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
 ## ⚠️ Disclaimer
 
@@ -168,7 +168,7 @@ This project is configured for easy deployment on PaaS providers like Railway or
   <li>Your poll responses are stored.</li>
 </ul>
 <b>**MYTHS:-</b> We do not store, log, or collect any of your sensitive information or personal data, because no sensitive data ever enters or rests on our systems, there is no data to leak or breach. All data is processed in real-time and immediately discarded after use.
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
 ## 📬 Contact & Links
 
